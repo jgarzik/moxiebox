@@ -1,1 +1,11 @@
-moxie sandbox
+
+This is a sandbox, in the spirit of Cloudius Systems' OSv.
+
+A single thread of execution pre-loads necessary data, runs a 32-bit
+little endian Moxie ELF binary until it exits or a cycle budget is
+exhausted.  Output, if any, is noted.
+
+From the Moxie program's point of view, it is running as root and is
+essentially the entire operating system kernel + application, all in
+a single wrapper.
+
