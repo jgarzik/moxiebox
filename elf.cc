@@ -6,6 +6,7 @@
 #include <libelf.h>
 #include <gelf.h>
 #include <sys/mman.h>
+#include <stdio.h>
 #include "sandbox.h"
 
 bool loadElfProgram(machine& mach, const char *filename)
@@ -42,6 +43,24 @@ bool loadElfProgram(machine& mach, const char *filename)
 	for (i = 0; i < n; i++) {
 		if ( gelf_getphdr (e, i, &phdr) != &phdr )
 			goto err_out_elf;
+
+		if (phdr.p_type != PT_LOAD) {
+			fprintf(stderr, "ignoring unknown p_type %lu\n",
+				(unsigned long) phdr.p_type);
+			continue;
+		}
+
+		size_t sz = phdr.p_memsz;
+		roDataRange *rdr = new roDataRange(sz);
+		rdr->start = phdr.p_vaddr;
+		rdr->length = sz;
+		rdr->end = rdr->start + rdr->length;
+
+		char *cp = (char *) p;
+		rdr->buf.assign(cp + phdr.p_offset, phdr.p_filesz);
+		rdr->buf.resize(phdr.p_memsz);
+
+		mach.memmap.push_back(rdr);
 	}
 
 	elf_end(e);

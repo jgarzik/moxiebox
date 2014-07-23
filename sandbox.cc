@@ -136,6 +136,7 @@ bool machine::write32(uint32_t addr, uint32_t val)
 class zeroPageRange : public addressRange {
 public:
 	zeroPageRange() {
+		name = "zeropage";
 		start = 0x0U;
 		length = MACH_PAGE_SIZE;
 		end = start + length;
@@ -163,6 +164,7 @@ void addZeroPage(machine& mach)
 class rwDataRange : public roDataRange {
 public:
 	rwDataRange(size_t sz) : roDataRange(sz) {
+		name = "rw";
 		start = 0;
 		end = 0;
 		length = sz;
@@ -231,6 +233,15 @@ static void usage(const char *progname)
 		progname);
 }
 
+static void printMemMap(machine &mach)
+{
+	for (unsigned int i = 0; i < mach.memmap.size(); i++) {
+		addressRange *ar = mach.memmap[i];
+		fprintf(stdout, "%s %08x-%08x\n",
+			ar->name.c_str(), ar->start, ar->end);
+	}
+}
+
 int main (int argc, char *argv[])
 {
 	machine mach;
@@ -259,6 +270,8 @@ int main (int argc, char *argv[])
 			exit(EXIT_FAILURE);
 		}
 	}
+
+	printMemMap(mach);
 
 	sim_resume(mach);
 	return 0;

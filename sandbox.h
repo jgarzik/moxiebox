@@ -27,11 +27,13 @@ enum moxie_mmap_flags {
 
 class addressRange {
 public:
+	std::string name;
 	uint32_t start;
 	uint32_t end;
 	uint32_t length;
 
 	addressRange() {
+		name = "ar";
 		start = 0;
 		end = 0;
 		length = 0;
@@ -65,6 +67,7 @@ public:
 	std::string buf;
 
 	roDataRange(size_t sz) {
+		name = "ro";
 		start = 0;
 		end = 0;
 		length = sz;
