@@ -2,6 +2,8 @@
 #define __SANDBOX_H__
 
 #include <vector>
+#include <string>
+#include <string.h>
 #include <stdint.h>
 
 enum {
@@ -55,6 +57,28 @@ public:
 	bool inRange(uint32_t addr, uint32_t len) {
 		return ((addr >= start) &&
 			((addr + len) <= end));		// warn: overflow
+	}
+};
+
+class roDataRange : public addressRange {
+public:
+	std::string buf;
+
+	roDataRange(size_t sz) {
+		start = 0;
+		end = 0;
+		length = sz;
+	}
+
+	bool read8(uint32_t addr, uint32_t& val_out) {
+		return read32(addr, val_out);
+	}
+	bool read16(uint32_t addr, uint32_t& val_out) {
+		return read32(addr, val_out);
+	}
+	bool read32(uint32_t addr, uint32_t& val_out) {
+		memcpy(&val_out, &buf[addr], sizeof(val_out));
+		return true;
 	}
 };
 

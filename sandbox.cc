@@ -160,25 +160,12 @@ void addZeroPage(machine& mach)
 	mach.memmap.push_back(zpr);
 }
 
-class rawDataRange : public addressRange {
+class rwDataRange : public roDataRange {
 public:
-	string buf;
-
-	rawDataRange(size_t sz) {
+	rwDataRange(size_t sz) : roDataRange(sz) {
 		start = 0;
 		end = 0;
 		length = sz;
-	}
-
-	bool read8(uint32_t addr, uint32_t& val_out) {
-		return read32(addr, val_out);
-	}
-	bool read16(uint32_t addr, uint32_t& val_out) {
-		return read32(addr, val_out);
-	}
-	bool read32(uint32_t addr, uint32_t& val_out) {
-		memcpy(&val_out, &buf[addr], sizeof(val_out));
-		return true;
 	}
 
 	bool write8(uint32_t addr, uint32_t val_in) {
@@ -216,7 +203,7 @@ bool loadRawData(machine& mach, const char *filename)
 		return false;
 	}
 
-	rawDataRange *rdr = new rawDataRange(st.st_size);
+	rwDataRange *rdr = new rwDataRange(st.st_size);
 
 	rdr->buf.assign((char *) p, (size_t) st.st_size);
 
