@@ -9,3 +9,7 @@ From the Moxie program's point of view, it is running as root and is
 essentially the entire operating system kernel + application, all in
 a single wrapper.
 
+From the sandbox's point of view, the application is running as an
+unpriv'd application with only the ability to access data within the
+hand-built memory map.
+
