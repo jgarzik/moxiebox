@@ -24,10 +24,10 @@ static FILE *tracefile = stdout;
 #define INST2OFFSET(o) ((((signed short)((o & ((1<<10)-1))<<6))>>6)<<1)
 
 #define EXTRACT_WORD(addr) \
-  ((sim_core_read_aligned_1 (mach, cia, read_map, addr) << 24) \
-   + (sim_core_read_aligned_1 (mach, cia, read_map, addr+1) << 16) \
-   + (sim_core_read_aligned_1 (mach, cia, read_map, addr+2) << 8) \
-   + (sim_core_read_aligned_1 (mach, cia, read_map, addr+3)))
+  ((sim_core_read_aligned_1 (mach, read_map, addr) << 24) \
+   + (sim_core_read_aligned_1 (mach, read_map, addr+1) << 16) \
+   + (sim_core_read_aligned_1 (mach, read_map, addr+2) << 8) \
+   + (sim_core_read_aligned_1 (mach, read_map, addr+3)))
 
 #if 0
 /* moxie register names.  */
@@ -90,18 +90,10 @@ set_initial_gprs ()
 
 /* Write a 1 byte value to memory.  */
 
-static address_word CIA_GET(machine& mach)
-{
-	address_word w;
-	return w;
-}
-
 static void INLINE 
 wbat (machine& mach, word pc, word x, word v)
 {
-  address_word cia = CIA_GET (mach);
-  
-  sim_core_write_aligned_1 (mach, cia, write_map, x, v);
+  sim_core_write_aligned_1 (mach, write_map, x, v);
 }
 
 /* Write a 2 byte value to memory.  */
@@ -109,9 +101,7 @@ wbat (machine& mach, word pc, word x, word v)
 static void INLINE 
 wsat (machine& mach, word pc, word x, word v)
 {
-  address_word cia = CIA_GET (mach);
-  
-  sim_core_write_aligned_2 (mach, cia, write_map, x, v);
+  sim_core_write_aligned_2 (mach, write_map, x, v);
 }
 
 /* Write a 4 byte value to memory.  */
@@ -119,9 +109,7 @@ wsat (machine& mach, word pc, word x, word v)
 static void INLINE 
 wlat (machine& mach, word pc, word x, word v)
 {
-  address_word cia = CIA_GET (mach);
-	
-  sim_core_write_aligned_4 (mach, cia, write_map, x, v);
+  sim_core_write_aligned_4 (mach, write_map, x, v);
 }
 
 /* Read 2 bytes from memory.  */
@@ -129,9 +117,7 @@ wlat (machine& mach, word pc, word x, word v)
 static int INLINE 
 rsat (machine& mach, word pc, word x)
 {
-  address_word cia = CIA_GET (mach);
-  
-  return (sim_core_read_aligned_2 (mach, cia, read_map, x));
+  return (sim_core_read_aligned_2 (mach, read_map, x));
 }
 
 /* Read 1 byte from memory.  */
@@ -139,9 +125,7 @@ rsat (machine& mach, word pc, word x)
 static int INLINE 
 rbat (machine& mach, word pc, word x)
 {
-  address_word cia = CIA_GET (mach);
-  
-  return (sim_core_read_aligned_1 (mach, cia, read_map, x));
+  return (sim_core_read_aligned_1 (mach, read_map, x));
 }
 
 /* Read 4 bytes from memory.  */
@@ -149,9 +133,7 @@ rbat (machine& mach, word pc, word x)
 static int INLINE 
 rlat (machine& mach, word pc, word x)
 {
-  address_word cia = CIA_GET (mach);
-  
-  return (sim_core_read_aligned_4 (mach, cia, read_map, x));
+  return (sim_core_read_aligned_4 (mach, read_map, x));
 }
 
 #define TRACE(str) if (tracing) fprintf(tracefile,"0x%08x, %s, 0x%x, 0x%x, 0x%x, 0x%x, 0x%x, 0x%x, 0x%x, 0x%x, 0x%x, 0x%x, 0x%x, 0x%x, 0x%x, 0x%x, 0x%x, 0x%x\n", opc, str, cpu.asregs.regs[0], cpu.asregs.regs[1], cpu.asregs.regs[2], cpu.asregs.regs[3], cpu.asregs.regs[4], cpu.asregs.regs[5], cpu.asregs.regs[6], cpu.asregs.regs[7], cpu.asregs.regs[8], cpu.asregs.regs[9], cpu.asregs.regs[10], cpu.asregs.regs[11], cpu.asregs.regs[12], cpu.asregs.regs[13], cpu.asregs.regs[14], cpu.asregs.regs[15]);
@@ -166,7 +148,6 @@ sim_resume (machine& mach)
   word pc, opc;
   unsigned long long insts;
   unsigned short inst;
-  address_word cia = CIA_GET (mach);
 
   cpu.asregs.exception = step ? SIGTRAP: 0;
   pc = cpu.asregs.regs[PC_REGNO];
@@ -178,8 +159,8 @@ sim_resume (machine& mach)
       opc = pc;
 
       /* Fetch the instruction at pc.  */
-      inst = (sim_core_read_aligned_1 (mach, cia, read_map, pc) << 8)
-	+ sim_core_read_aligned_1 (mach, cia, read_map, pc+1);
+      inst = (sim_core_read_aligned_1 (mach, read_map, pc) << 8)
+	+ sim_core_read_aligned_1 (mach, read_map, pc+1);
 
       /* Decode instruction.  */
       if (inst & (1 << 15))
