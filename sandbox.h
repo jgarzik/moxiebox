@@ -87,6 +87,7 @@ public:
 
 class machine {
 public:
+	uint32_t startAddr;
 	std::vector<addressRange*> memmap;
 
 	bool read8(uint32_t addr, uint32_t& val_out);

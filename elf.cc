@@ -49,6 +49,9 @@ bool loadElfProgram(machine& mach, const char *filename)
 		goto err_out_elf;
 	}
 
+	mach.startAddr = ehdr.e_entry;
+	fprintf(stdout, "ep %08lx\n", ehdr.e_entry);
+
 	size_t n;
 	if ( elf_getphdrnum (e , & n ) != 0)
 		goto err_out_elf;

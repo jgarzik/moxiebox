@@ -218,6 +218,8 @@ int main (int argc, char *argv[])
 {
 	machine mach;
 
+	set_initial_gprs();
+
 	int opt;
 	while ((opt = getopt(argc, argv, "e:d:")) != -1) {
 		switch(opt) {
