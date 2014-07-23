@@ -34,6 +34,16 @@ bool loadElfProgram(machine& mach, const char *filename)
 	if ( elf_kind ( e ) != ELF_K_ELF )
 		goto err_out_elf;
 
+	GElf_Ehdr ehdr;
+	if (gelf_getehdr(e, &ehdr) != &ehdr)
+		goto err_out_elf;
+
+	if ((ehdr.e_ident[EI_CLASS] != ELFCLASS32) ||
+	    (ehdr.e_ident[EI_DATA] != ELFDATA2LSB)) {
+		fprintf(stderr, "unsupported ELF binary type\n");
+		goto err_out_elf;
+	}
+
 	size_t n;
 	if ( elf_getphdrnum (e , & n ) != 0)
 		goto err_out_elf;
