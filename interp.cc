@@ -1,17 +1,171 @@
+
 /* Simulator for the moxie processor
    Copyright 2014 Anthony Green
    Distributed under the MIT/X11 software license, see the accompanying
    file COPYING or http://www.opensource.org/licenses/mit-license.php.
 */
 
+#include <stdio.h>
+#include <stdint.h>
+#include <stdlib.h>
+#include <signal.h>
+#include "demo.h"
+
+#define INLINE inline
+
+typedef int32_t word;
+typedef uint32_t uword;
+
+struct sim_cpu {
+	int dummy;
+};
+
+class address_word {
+public:
+	int dummy;
+};
+
+static FILE *tracefile = stdout;
+
+/* Extract the signed 10-bit offset from a 16-bit branch
+   instruction.  */
+#define INST2OFFSET(o) ((((signed short)((o & ((1<<10)-1))<<6))>>6)<<1)
+
+#define EXTRACT_WORD(addr) \
+  ((sim_core_read_aligned_1 (scpu, cia, read_map, addr) << 24) \
+   + (sim_core_read_aligned_1 (scpu, cia, read_map, addr+1) << 16) \
+   + (sim_core_read_aligned_1 (scpu, cia, read_map, addr+2) << 8) \
+   + (sim_core_read_aligned_1 (scpu, cia, read_map, addr+3)))
+
+/* moxie register names.  */
+static const char *reg_names[16] = 
+  { "$fp", "$sp", "$r0", "$r1", "$r2", "$r3", "$r4", "$r5", 
+    "$r6", "$r7", "$r8", "$r9", "$r10", "$r11", "$r12", "$r13" };
+
+/* The machine state.
+
+   This state is maintained in host byte order.  The fetch/store
+   register functions must translate between host byte order and the
+   target processor byte order.  Keeping this data in target byte
+   order simplifies the register read/write functions.  Keeping this
+   data in native order improves the performance of the simulator.
+   Simulation speed is deemed more important.  */
+
+#define NUM_MOXIE_REGS 17 /* Including PC */
+#define NUM_MOXIE_SREGS 256 /* The special registers */
+#define PC_REGNO     16
+
+/* The ordering of the moxie_regset structure is matched in the
+   gdb/config/moxie/tm-moxie.h file in the REGISTER_NAMES macro.  */
+struct moxie_regset
+{
+  word		  regs[NUM_MOXIE_REGS + 1]; /* primary registers */
+  word		  sregs[256];             /* special registers */
+  word            cc;                   /* the condition code reg */
+  int		  exception;
+  unsigned long long insts;                /* instruction counter */
+};
+
+#define CC_GT  1<<0
+#define CC_LT  1<<1
+#define CC_EQ  1<<2
+#define CC_GTU 1<<3
+#define CC_LTU 1<<4
+
+union
+{
+  struct moxie_regset asregs;
+  word asints [1];		/* but accessed larger... */
+} cpu;
+
+static void
+set_initial_gprs ()
+{
+  int i;
+  long space;
+  
+  /* Set up machine just out of reset.  */
+  cpu.asregs.regs[PC_REGNO] = 0;
+  
+  /* Clean out the register contents.  */
+  for (i = 0; i < NUM_MOXIE_REGS; i++)
+    cpu.asregs.regs[i] = 0;
+  for (i = 0; i < NUM_MOXIE_SREGS; i++)
+    cpu.asregs.sregs[i] = 0;
+}
+
+/* Write a 1 byte value to memory.  */
+
+static address_word CIA_GET(sim_cpu *scpu)
+{
+	address_word w;
+	return w;
+}
+
+static void INLINE 
+wbat (sim_cpu *scpu, word pc, word x, word v)
+{
+  address_word cia = CIA_GET (scpu);
+  
+  sim_core_write_aligned_1 (scpu, cia, write_map, x, v);
+}
+
+/* Write a 2 byte value to memory.  */
+
+static void INLINE 
+wsat (sim_cpu *scpu, word pc, word x, word v)
+{
+  address_word cia = CIA_GET (scpu);
+  
+  sim_core_write_aligned_2 (scpu, cia, write_map, x, v);
+}
+
+/* Write a 4 byte value to memory.  */
+
+static void INLINE 
+wlat (sim_cpu *scpu, word pc, word x, word v)
+{
+  address_word cia = CIA_GET (scpu);
+	
+  sim_core_write_aligned_4 (scpu, cia, write_map, x, v);
+}
+
+/* Read 2 bytes from memory.  */
+
+static int INLINE 
+rsat (sim_cpu *scpu, word pc, word x)
+{
+  address_word cia = CIA_GET (scpu);
+  
+  return (sim_core_read_aligned_2 (scpu, cia, read_map, x));
+}
+
+/* Read 1 byte from memory.  */
+
+static int INLINE 
+rbat (sim_cpu *scpu, word pc, word x)
+{
+  address_word cia = CIA_GET (scpu);
+  
+  return (sim_core_read_aligned_1 (scpu, cia, read_map, x));
+}
+
+/* Read 4 bytes from memory.  */
+
+static int INLINE 
+rlat (sim_cpu *scpu, word pc, word x)
+{
+  address_word cia = CIA_GET (scpu);
+  
+  return (sim_core_read_aligned_4 (scpu, cia, read_map, x));
+}
+
 #define TRACE(str) if (tracing) fprintf(tracefile,"0x%08x, %s, 0x%x, 0x%x, 0x%x, 0x%x, 0x%x, 0x%x, 0x%x, 0x%x, 0x%x, 0x%x, 0x%x, 0x%x, 0x%x, 0x%x, 0x%x, 0x%x\n", opc, str, cpu.asregs.regs[0], cpu.asregs.regs[1], cpu.asregs.regs[2], cpu.asregs.regs[3], cpu.asregs.regs[4], cpu.asregs.regs[5], cpu.asregs.regs[6], cpu.asregs.regs[7], cpu.asregs.regs[8], cpu.asregs.regs[9], cpu.asregs.regs[10], cpu.asregs.regs[11], cpu.asregs.regs[12], cpu.asregs.regs[13], cpu.asregs.regs[14], cpu.asregs.regs[15]);
 
 static int tracing = 0;
 
 void
-sim_resume (sd, step, siggnal)
-     SIM_DESC sd;
-     int step, siggnal;
+sim_resume (SIM_DESC& sd, int step, int siggnal)
 {
   word pc, opc;
   unsigned long long insts;

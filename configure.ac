@@ -1,0 +1,28 @@
+AC_INIT([moxiebox], [0.0.1],
+        [http://github.com/jgarzik/moxiebox/])
+
+AC_PREREQ(2.52)
+AC_CONFIG_SRCDIR([demo.cc])
+AM_INIT_AUTOMAKE([gnu])
+AC_CONFIG_HEADERS([moxiebox-config.h])
+
+
+AC_PROG_CXX
+AC_PROG_CC
+AC_PROG_CPP
+AC_PROG_CXXCPP
+AC_PROG_INSTALL
+AC_PROG_OBJC
+AC_PROG_LN_S
+AC_PROG_MKDIR_P
+AC_PROG_SED
+AC_PATH_TOOL(AR, ar)
+AC_PATH_TOOL(RANLIB, ranlib)
+AC_PATH_TOOL(STRIP, strip)
+PKG_PROG_PKG_CONFIG
+
+AC_LANG_PUSH([C++])
+
+AC_CONFIG_FILES([Makefile])
+AC_OUTPUT
+
