@@ -28,22 +28,6 @@ static FILE *tracefile = stdout;
 
 #define cpu mach.cpu
 
-void
-set_initial_gprs (machine& mach)
-{
-  int i;
-  //long space;
-  
-  /* Set up machine just out of reset.  */
-  cpu.asregs.regs[PC_REGNO] = 0;
-  
-  /* Clean out the register contents.  */
-  for (i = 0; i < NUM_MOXIE_REGS; i++)
-    cpu.asregs.regs[i] = 0;
-  for (i = 0; i < NUM_MOXIE_SREGS; i++)
-    cpu.asregs.sregs[i] = 0;
-}
-
 /* Write a 1 byte value to memory.  */
 
 static void INLINE 

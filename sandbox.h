@@ -62,6 +62,15 @@ enum {
 	CC_LTU = (1<<4),
 };
 
+class cpuState {
+public:
+	struct moxie_regset asregs;
+
+	cpuState() {
+		memset(&asregs, 0, sizeof(asregs));
+	}
+};
+
 class addressRange {
 public:
 	std::string name;
@@ -122,11 +131,6 @@ public:
 	}
 };
 
-class cpuState {
-public:
-	struct moxie_regset asregs;
-};
-
 class machine {
 public:
 	uint32_t startAddr;
@@ -142,7 +146,6 @@ public:
 	bool write32(uint32_t addr, uint32_t val);
 };
 
-extern void set_initial_gprs(machine& mach);
 extern void sim_resume (machine& mach, unsigned long long cpu_budget = 0);
 extern bool loadElfProgram(machine& mach, const char *filename);
 
