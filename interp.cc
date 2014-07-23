@@ -24,10 +24,10 @@ static FILE *tracefile = stdout;
 #define INST2OFFSET(o) ((((signed short)((o & ((1<<10)-1))<<6))>>6)<<1)
 
 #define EXTRACT_WORD(addr) \
-  ((sim_core_read_aligned_1 (mach, addr) << 24) \
-   + (sim_core_read_aligned_1 (mach, addr+1) << 16) \
-   + (sim_core_read_aligned_1 (mach, addr+2) << 8) \
-   + (sim_core_read_aligned_1 (mach, addr+3)))
+  (  (sim_core_read_aligned_1 (mach, addr)) \
+   + (sim_core_read_aligned_1 (mach, addr+1) << 8) \
+   + (sim_core_read_aligned_1 (mach, addr+2) << 16) \
+   + (sim_core_read_aligned_1 (mach, addr+3) << 24) )
 
 #if 0
 /* moxie register names.  */
@@ -159,8 +159,8 @@ sim_resume (machine& mach, unsigned long long cpu_budget)
       opc = pc;
 
       /* Fetch the instruction at pc.  */
-      inst = (sim_core_read_aligned_1 (mach, pc) << 8)
-	+ sim_core_read_aligned_1 (mach, pc+1);
+      inst = ((sim_core_read_aligned_1 (mach, pc))
+	    + (sim_core_read_aligned_1 (mach, pc+1) << 8));
 
       /* Decode instruction.  */
       if (inst & (1 << 15))
