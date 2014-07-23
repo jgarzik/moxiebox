@@ -8,5 +8,5 @@ moxie-elf-ar rvs --target=elf32-littlemoxie libsandboxrt.a \
 	sys-exit.o \
 	sys-mmap.o
 
-moxie-elf-gcc -Wall -O -mel -nostdlib -o test1 test1.c libsandboxrt.a
+moxie-elf-gcc -Wall -O -mel -static -nostdlib -o test1 test1.c libsandboxrt.a
 
