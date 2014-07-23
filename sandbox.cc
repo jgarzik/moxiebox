@@ -1,4 +1,8 @@
 
+#include <sys/types.h>
+#include <sys/stat.h>
+#include <sys/mman.h>
+#include <fcntl.h>
 #include <string>
 #include <vector>
 #include <string.h>
@@ -66,9 +70,9 @@ void sim_core_write_aligned_4(machine& mach,
 bool machine::read8(uint32_t addr, uint32_t& val_out)
 {
 	for (unsigned int i = 0; i < memmap.size(); i++) {
-		addressRange& mr = memmap[i];
-		if (mr.inRange(addr, 1))
-			return mr.read8(addr - mr.start, val_out);
+		addressRange* mr = memmap[i];
+		if (mr->inRange(addr, 1))
+			return mr->read8(addr - mr->start, val_out);
 	}
 
 	return false;
@@ -77,9 +81,9 @@ bool machine::read8(uint32_t addr, uint32_t& val_out)
 bool machine::read16(uint32_t addr, uint32_t& val_out)
 {
 	for (unsigned int i = 0; i < memmap.size(); i++) {
-		addressRange& mr = memmap[i];
-		if (mr.inRange(addr, 1))
-			return mr.read16(addr - mr.start, val_out);
+		addressRange* mr = memmap[i];
+		if (mr->inRange(addr, 1))
+			return mr->read16(addr - mr->start, val_out);
 	}
 
 	return false;
@@ -88,9 +92,9 @@ bool machine::read16(uint32_t addr, uint32_t& val_out)
 bool machine::read32(uint32_t addr, uint32_t& val_out)
 {
 	for (unsigned int i = 0; i < memmap.size(); i++) {
-		addressRange& mr = memmap[i];
-		if (mr.inRange(addr, 1))
-			return mr.read32(addr - mr.start, val_out);
+		addressRange* mr = memmap[i];
+		if (mr->inRange(addr, 1))
+			return mr->read32(addr - mr->start, val_out);
 	}
 
 	return false;
@@ -99,9 +103,9 @@ bool machine::read32(uint32_t addr, uint32_t& val_out)
 bool machine::write8(uint32_t addr, uint32_t val)
 {
 	for (unsigned int i = 0; i < memmap.size(); i++) {
-		addressRange& mr = memmap[i];
-		if (mr.inRange(addr, 1))
-			return mr.write8(addr - mr.start, val);
+		addressRange* mr = memmap[i];
+		if (mr->inRange(addr, 1))
+			return mr->write8(addr - mr->start, val);
 	}
 
 	return false;
@@ -110,9 +114,9 @@ bool machine::write8(uint32_t addr, uint32_t val)
 bool machine::write16(uint32_t addr, uint32_t val)
 {
 	for (unsigned int i = 0; i < memmap.size(); i++) {
-		addressRange& mr = memmap[i];
-		if (mr.inRange(addr, 1))
-			return mr.write16(addr - mr.start, val);
+		addressRange* mr = memmap[i];
+		if (mr->inRange(addr, 1))
+			return mr->write16(addr - mr->start, val);
 	}
 
 	return false;
@@ -121,94 +125,109 @@ bool machine::write16(uint32_t addr, uint32_t val)
 bool machine::write32(uint32_t addr, uint32_t val)
 {
 	for (unsigned int i = 0; i < memmap.size(); i++) {
-		addressRange& mr = memmap[i];
-		if (mr.inRange(addr, 1))
-			return mr.write32(addr - mr.start, val);
+		addressRange* mr = memmap[i];
+		if (mr->inRange(addr, 1))
+			return mr->write32(addr - mr->start, val);
 	}
 
 	return false;
 }
 
-bool err_write(uint32_t addr, uint32_t val)
-{
-	return false;
-}
+class zeroPageRange : public addressRange {
+public:
+	zeroPageRange() {
+		start = 0x0U;
+		length = MACH_PAGE_SIZE;
+		end = start + length;
+	}
 
-bool zp_read8(uint32_t addr, uint32_t& val_out)
-{
-	val_out = 0;
-	return true;
-}
+	bool read8(uint32_t addr, uint32_t& val_out) {
+		return read32(addr, val_out);
+	}
+	bool read16(uint32_t addr, uint32_t& val_out) {
+		return read32(addr, val_out);
+	}
+	bool read32(uint32_t addr, uint32_t& val_out) {
+		val_out = 0;
+		return true;
+	}
+};
 
 void addZeroPage(machine& mach)
 {
-	addressRange zp;
+	zeroPageRange *zpr = new zeroPageRange();
 
-	zp.start = 0x0U;
-	zp.length = MACH_PAGE_SIZE;
-	zp.end = zp.start + zp.length;
-
-	zp.read8 = zp_read8;
-	zp.read16 = zp_read8;
-	zp.read32 = zp_read8;
-	zp.write8 = err_write;
-	zp.write16 = err_write;
-	zp.write32 = err_write;
-
-	mach.memmap.push_back(zp);
+	mach.memmap.push_back(zpr);
 }
 
-vector<string> inputFiles;
+class rawDataRange : public addressRange {
+public:
+	string buf;
 
-bool file_read32(uint32_t addr, uint32_t& val_out)
-{
-	string& data = inputFiles[0];	// FIXME
+	rawDataRange(size_t sz) {
+		start = 0;
+		end = 0;
+		length = sz;
+	}
 
-	if ((addr + sizeof(uint32_t)) > data.size())
-		return false;
+	bool read8(uint32_t addr, uint32_t& val_out) {
+		return read32(addr, val_out);
+	}
+	bool read16(uint32_t addr, uint32_t& val_out) {
+		return read32(addr, val_out);
+	}
+	bool read32(uint32_t addr, uint32_t& val_out) {
+		memcpy(&val_out, &buf[addr], sizeof(val_out));
+		return true;
+	}
 
-	memcpy(&val_out, &data[addr], sizeof(uint32_t));
-	return true;
-}
+	bool write8(uint32_t addr, uint32_t val_in) {
+		uint8_t val = val_in;
+		memcpy(&buf[addr], &val, sizeof(val));
+		return true;
+	}
+	bool write16(uint32_t addr, uint32_t val_in) {
+		uint16_t val = val_in;
+		memcpy(&buf[addr], &val, sizeof(val));
+		return true;
+	}
+	bool write32(uint32_t addr, uint32_t val_in) {
+		memcpy(&buf[addr], &val_in, sizeof(val_in));
+		return true;
+	}
+};
 
 bool loadRawData(machine& mach, const char *filename)
 {
-	string fileData;
-
-	FILE *f = fopen(filename, "r");
-	if (!f) {
-		perror(filename);
+	int fd;
+	if (( fd = open ( filename, O_RDONLY , 0)) < 0)
 		return false;
-	}
-	
-	char line[512];
-	while (fgets(line, sizeof(line), f) != NULL) {
-		fileData += line;
-	}
 
-	if (ferror(f)) {
-		perror(filename);
+	struct stat st;
+	if (fstat(fd, &st) < 0) {
+		close(fd);
 		return false;
 	}
 
-	fclose(f);
+	void *p;
+	p = mmap(NULL, st.st_size, PROT_READ, MAP_PRIVATE, fd, 0);
+	if (p == (void *)-1) {
+		close(fd);
+		return false;
+	}
 
-	uint32_t last_end = mach.memmap.back().end;
+	rawDataRange *rdr = new rawDataRange(st.st_size);
 
-	addressRange fr;
+	rdr->buf.assign((char *) p, (size_t) st.st_size);
 
-	fr.start = (last_end + (MACH_PAGE_SIZE * 2)) & ~(MACH_PAGE_SIZE-1);
-	fr.length = fileData.size();
-	fr.end = fr.start + fr.length;
+	munmap(p, st.st_size);
+	close(fd);
 
-	fr.read8 = file_read32;
-	fr.read16 = file_read32;
-	fr.read32 = file_read32;
-	fr.write8 = err_write;
-	fr.write16 = err_write;
-	fr.write32 = err_write;
+	addressRange *ar = mach.memmap.back();
+	rdr->start = ar->end + (MACH_PAGE_SIZE * 2);
+	rdr->end = rdr->start + rdr->length;
 
-	mach.memmap.push_back(fr);
+	mach.memmap.push_back(rdr);
 
 	return true;
 }

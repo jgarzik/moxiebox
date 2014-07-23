@@ -29,13 +29,28 @@ public:
 	uint32_t end;
 	uint32_t length;
 
-	bool (*read8)(uint32_t addr, uint32_t& val_out);
-	bool (*read16)(uint32_t addr, uint32_t& val_out);
-	bool (*read32)(uint32_t addr, uint32_t& val_out);
+	addressRange() {
+		start = 0;
+		end = 0;
+		length = 0;
+	}
 
-	bool (*write8)(uint32_t addr, uint32_t val);
-	bool (*write16)(uint32_t addr, uint32_t val);
-	bool (*write32)(uint32_t addr, uint32_t val);
+	bool read8(uint32_t addr, uint32_t& val_out) {
+		val_out = 0xffffffffU;
+		return false;
+	}
+	bool read16(uint32_t addr, uint32_t& val_out) {
+		val_out = 0xffffffffU;
+		return false;
+	}
+	bool read32(uint32_t addr, uint32_t& val_out) {
+		val_out = 0xffffffffU;
+		return false;
+	}
+
+	bool write8(uint32_t addr, uint32_t val) { return false; }
+	bool write16(uint32_t addr, uint32_t val) { return false; }
+	bool write32(uint32_t addr, uint32_t val) { return false; }
 
 	bool inRange(uint32_t addr, uint32_t len) {
 		return ((addr >= start) &&
@@ -45,7 +60,7 @@ public:
 
 class machine {
 public:
-	std::vector<addressRange> memmap;
+	std::vector<addressRange*> memmap;
 
 	bool read8(uint32_t addr, uint32_t& val_out);
 	bool read16(uint32_t addr, uint32_t& val_out);
