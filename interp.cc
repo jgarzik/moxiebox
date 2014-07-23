@@ -141,7 +141,7 @@ rlat (machine& mach, word pc, word x)
 static int tracing = 0;
 
 void
-sim_resume (machine& mach)
+sim_resume (machine& mach, unsigned long long cpu_budget)
 {
   int step = 0;
 
@@ -894,6 +894,9 @@ sim_resume (machine& mach)
 
       insts++;
       pc += 2;
+
+      if (cpu_budget && (insts >= cpu_budget))
+      	break;
 
     } while (!cpu.asregs.exception);
 
