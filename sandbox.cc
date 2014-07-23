@@ -156,7 +156,7 @@ void addZeroPage(machine& mach)
 	addressRange zp;
 
 	zp.start = 0x0U;
-	zp.length = 4096;
+	zp.length = MACH_PAGE_SIZE;
 	zp.end = zp.start + zp.length;
 
 	zp.read8 = zp_read8;
@@ -246,7 +246,7 @@ void loadFile(machine& mach, const char *filename)
 
 	addressRange fr;
 
-	fr.start = (last_end + (4096 * 2)) & ~(4096-1);
+	fr.start = (last_end + (MACH_PAGE_SIZE * 2)) & ~(MACH_PAGE_SIZE-1);
 	fr.length = fileData.size();
 	fr.end = fr.start + fr.length;
 

@@ -4,6 +4,25 @@
 #include <vector>
 #include <stdint.h>
 
+enum {
+	MACH_PAGE_SIZE = 4096,
+};
+
+// TODO: check w/ ABI
+enum moxie_mmap_prot_flags {
+	MOXIE_PROT_EXEC = (1U << 0),
+	MOXIE_PROT_READ = (1U << 1),
+	MOXIE_PROT_WRITE = (1U << 2),
+	MOXIE_PROT_NONE = 0U,
+};
+
+// TODO: check w/ ABI
+enum moxie_mmap_flags {
+	MOXIE_MAP_SHARED = (1U << 0),
+	MOXIE_MAP_PRIVATE = (1U << 1),
+	MOXIE_MAP_ANONYMOUS = (1U << 2),
+};
+
 enum map_direction {
 	read_map,
 	write_map,

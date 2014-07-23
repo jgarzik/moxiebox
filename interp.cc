@@ -9,6 +9,7 @@
 #include <stdint.h>
 #include <stdlib.h>
 #include <signal.h>
+#include <errno.h>
 #include "sandbox.h"
 
 #define INLINE inline
@@ -769,11 +770,44 @@ sim_resume (machine& mach)
 	        cpu.asregs.sregs[3] = inum;
 		switch (inum)
 		  {
+
 		  case 0x1: /* SYS_exit */
 		    {
 		      cpu.asregs.exception = SIGQUIT;
 		      break;
 		    }
+
+		  case 90: /* SYS_mmap */
+		    {
+		      uint32_t addr = cpu.asregs.regs[0];
+		      int32_t length = cpu.asregs.regs[1];
+		      int32_t prot = cpu.asregs.regs[2];
+		      int32_t flags = cpu.asregs.regs[3];
+		      int32_t fd = cpu.asregs.regs[4];
+		      int32_t offset = cpu.asregs.regs[5];
+
+		      // ignore fd, offset
+		      (void) fd;
+		      (void) offset;
+
+		      if ((addr != 0) ||
+		          (length < MACH_PAGE_SIZE) ||
+			  (length & (MACH_PAGE_SIZE-1)) ||
+			  (!(prot & MOXIE_PROT_READ)) ||
+			  (!(prot & MOXIE_PROT_WRITE)) ||
+			  (!(prot & MOXIE_PROT_EXEC)) ||
+			  (!(flags & MOXIE_MAP_PRIVATE)) ||
+			  (!(flags & MOXIE_MAP_ANONYMOUS))) {
+		      	cpu.asregs.regs[0] = -EINVAL;
+		      	break;
+		      }
+
+		      // TODO: the implementation (== malloc)
+
+		      cpu.asregs.regs[0] = -EINVAL;
+		      break;
+		    }
+
 		  default:
 		    break;
 		  }
