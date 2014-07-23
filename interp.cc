@@ -14,9 +14,6 @@
 
 #define INLINE inline
 
-typedef int32_t word;
-typedef uint32_t uword;
-
 static FILE *tracefile = stdout;
 
 /* Extract the signed 10-bit offset from a 16-bit branch
@@ -29,51 +26,10 @@ static FILE *tracefile = stdout;
    + (sim_core_read_aligned_1 (mach, addr+2) << 16) \
    + (sim_core_read_aligned_1 (mach, addr+3) << 24) )
 
-#if 0
-/* moxie register names.  */
-static const char *reg_names[16] = 
-  { "$fp", "$sp", "$r0", "$r1", "$r2", "$r3", "$r4", "$r5", 
-    "$r6", "$r7", "$r8", "$r9", "$r10", "$r11", "$r12", "$r13" };
-#endif
-
-/* The machine state.
-
-   This state is maintained in host byte order.  The fetch/store
-   register functions must translate between host byte order and the
-   target processor byte order.  Keeping this data in target byte
-   order simplifies the register read/write functions.  Keeping this
-   data in native order improves the performance of the simulator.
-   Simulation speed is deemed more important.  */
-
-#define NUM_MOXIE_REGS 17 /* Including PC */
-#define NUM_MOXIE_SREGS 256 /* The special registers */
-#define PC_REGNO     16
-
-/* The ordering of the moxie_regset structure is matched in the
-   gdb/config/moxie/tm-moxie.h file in the REGISTER_NAMES macro.  */
-struct moxie_regset
-{
-  word		  regs[NUM_MOXIE_REGS + 1]; /* primary registers */
-  word		  sregs[256];             /* special registers */
-  word            cc;                   /* the condition code reg */
-  int		  exception;
-  unsigned long long insts;                /* instruction counter */
-};
-
-#define CC_GT  1<<0
-#define CC_LT  1<<1
-#define CC_EQ  1<<2
-#define CC_GTU 1<<3
-#define CC_LTU 1<<4
-
-union
-{
-  struct moxie_regset asregs;
-  word asints [1];		/* but accessed larger... */
-} cpu;
+#define cpu mach.cpu
 
 void
-set_initial_gprs ()
+set_initial_gprs (machine& mach)
 {
   int i;
   //long space;
