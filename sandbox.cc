@@ -11,7 +11,6 @@ using namespace std;
 static const uint32_t RAM_SIZE = 16 * 1024 * 1024;
 
 uint32_t sim_core_read_aligned_1(machine& mach,
-				     enum map_direction mdir,
 				     uint32_t addr)
 {
 	uint32_t ret;
@@ -21,7 +20,6 @@ uint32_t sim_core_read_aligned_1(machine& mach,
 }
 
 uint32_t sim_core_read_aligned_2(machine& mach,
-				     enum map_direction mdir,
 				     uint32_t addr)
 {
 	uint32_t ret;
@@ -31,7 +29,6 @@ uint32_t sim_core_read_aligned_2(machine& mach,
 }
 
 uint32_t sim_core_read_aligned_4(machine& mach,
-				     enum map_direction mdir,
 				     uint32_t addr)
 {
 	uint32_t ret;
@@ -42,7 +39,6 @@ uint32_t sim_core_read_aligned_4(machine& mach,
 
 
 void sim_core_write_aligned_1(machine& mach,
-				     enum map_direction mdir,
 				     uint32_t addr,
 				     uint32_t val)
 {
@@ -51,7 +47,6 @@ void sim_core_write_aligned_1(machine& mach,
 }
 
 void sim_core_write_aligned_2(machine& mach,
-				     enum map_direction mdir,
 				     uint32_t addr,
 				     uint32_t val)
 {
@@ -60,7 +55,6 @@ void sim_core_write_aligned_2(machine& mach,
 }
 
 void sim_core_write_aligned_4(machine& mach,
-				     enum map_direction mdir,
 				     uint32_t addr,
 				     uint32_t val)
 {
