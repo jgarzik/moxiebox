@@ -133,34 +133,6 @@ bool machine::write32(uint32_t addr, uint32_t val)
 	return false;
 }
 
-class zeroPageRange : public addressRange {
-public:
-	zeroPageRange() {
-		name = "zeropage";
-		start = 0x0U;
-		length = MACH_PAGE_SIZE;
-		end = start + length;
-	}
-
-	bool read8(uint32_t addr, uint32_t& val_out) {
-		return read32(addr, val_out);
-	}
-	bool read16(uint32_t addr, uint32_t& val_out) {
-		return read32(addr, val_out);
-	}
-	bool read32(uint32_t addr, uint32_t& val_out) {
-		val_out = 0;
-		return true;
-	}
-};
-
-void addZeroPage(machine& mach)
-{
-	zeroPageRange *zpr = new zeroPageRange();
-
-	mach.memmap.push_back(zpr);
-}
-
 class rwDataRange : public roDataRange {
 public:
 	rwDataRange(size_t sz) : roDataRange(sz) {
@@ -245,8 +217,6 @@ static void printMemMap(machine &mach)
 int main (int argc, char *argv[])
 {
 	machine mach;
-
-	addZeroPage(mach);
 
 	int opt;
 	while ((opt = getopt(argc, argv, "e:d:")) != -1) {
