@@ -28,10 +28,12 @@ static FILE *tracefile = stdout;
    + (sim_core_read_aligned_1 (mach, cia, read_map, addr+2) << 8) \
    + (sim_core_read_aligned_1 (mach, cia, read_map, addr+3)))
 
+#if 0
 /* moxie register names.  */
 static const char *reg_names[16] = 
   { "$fp", "$sp", "$r0", "$r1", "$r2", "$r3", "$r4", "$r5", 
     "$r6", "$r7", "$r8", "$r9", "$r10", "$r11", "$r12", "$r13" };
+#endif
 
 /* The machine state.
 
@@ -69,11 +71,11 @@ union
   word asints [1];		/* but accessed larger... */
 } cpu;
 
-static void
+void
 set_initial_gprs ()
 {
   int i;
-  long space;
+  //long space;
   
   /* Set up machine just out of reset.  */
   cpu.asregs.regs[PC_REGNO] = 0;
