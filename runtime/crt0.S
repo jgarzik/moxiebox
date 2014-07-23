@@ -1,6 +1,6 @@
 /* crt0.S -- startup file for moxie
  * 
- * Copyright (c) 2008, 2009  Anthony Green
+ * Copyright (c) 2008, 2009, 2014  Anthony Green
  *
  * The authors hereby grant permission to use, copy, modify, distribute,
  * and license this software and its documentation for any purpose, provided
@@ -27,6 +27,18 @@ _start:
 	lda.l	$r0, 0x4
 	ldi.l	$r1, 0x8
 	
+	/* Clear out BSS.  */
+	ldi.l	$r0, edata
+	ldi.l	$r1, end
+	xor	$r2, $r2
+.L1:
+	cmp	$r0, $r1
+	beq	.L2
+	sto.l	0($r0), $r2
+	inc	$r0, 4
+	jmpa	.L1
+
+.L2:	
 	jsra	main
 
 .Lend:
