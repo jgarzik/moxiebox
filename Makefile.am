@@ -1,5 +1,5 @@
 
-noinst_PROGRAMS = demo
+noinst_PROGRAMS = sandbox
 
-demo_SOURCES = demo.cc demo.h interp.cc
+sandbox_SOURCES = sandbox.cc sandbox.h interp.cc
 

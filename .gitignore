@@ -18,6 +18,6 @@ moxiebox-config.h*
 stamp-h1
 
 *.o
-demo
+sandbox
 
 

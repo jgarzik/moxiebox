@@ -1,7 +1,7 @@
 
 #include <string>
 #include <stdio.h>
-#include "demo.h"
+#include "sandbox.h"
 
 uint32_t sim_core_read_aligned_1(machine& mach,
 				     address_word& cia,

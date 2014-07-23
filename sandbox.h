@@ -11,11 +11,15 @@ enum map_direction {
 class address_word {
 public:
 	int dummy;
+
+	address_word() { dummy = 0; }
 };
 
 class machine {
 public:
 	int dummy;
+
+	machine() { dummy = 0; }
 };
 
 extern void sim_resume (machine& mach);

@@ -2,7 +2,7 @@ AC_INIT([moxiebox], [0.0.1],
         [http://github.com/jgarzik/moxiebox/])
 
 AC_PREREQ(2.52)
-AC_CONFIG_SRCDIR([demo.cc])
+AC_CONFIG_SRCDIR([sandbox.cc])
 AM_INIT_AUTOMAKE([gnu])
 AC_CONFIG_HEADERS([moxiebox-config.h])
 
