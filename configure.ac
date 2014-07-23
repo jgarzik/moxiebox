@@ -23,6 +23,10 @@ PKG_PROG_PKG_CONFIG
 
 AC_LANG_PUSH([C++])
 
+AC_CHECK_LIB(elf, elf_getphdrnum, ELF_LIBS=-lelf)
+
+AC_SUBST(ELF_LIBS)
+
 AC_CONFIG_FILES([Makefile])
 AC_OUTPUT
 

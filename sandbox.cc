@@ -4,6 +4,7 @@
 #include <string.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <unistd.h>
 #include "sandbox.h"
 
 using namespace std;
@@ -157,44 +158,6 @@ void addZeroPage(machine& mach)
 	mach.memmap.push_back(zp);
 }
 
-static unsigned char ramBuffer[RAM_SIZE];
-
-bool ram_read32(uint32_t addr, uint32_t& val_out)
-{
-	if ((addr + sizeof(uint32_t)) > RAM_SIZE)
-		return false;
-
-	memcpy(&val_out, ramBuffer + addr, sizeof(uint32_t));
-	return true;
-}
-
-bool ram_write32(uint32_t addr, uint32_t val)
-{
-	if ((addr + sizeof(uint32_t)) > RAM_SIZE)
-		return false;
-
-	memcpy(ramBuffer + addr, &val, sizeof(uint32_t));
-	return true;
-}
-
-void addRam(machine& mach)
-{
-        addressRange ram;
-
-	ram.start = 16 * 1024 * 1024;
-	ram.length = RAM_SIZE;
-	ram.end = ram.start + ram.length;
-
-	ram.read8 = ram_read32;
-	ram.read16 = ram_read32;
-	ram.read32 = ram_read32;
-	ram.write8 = ram_write32;
-	ram.write16 = ram_write32;
-	ram.write32 = ram_write32;
-
-	mach.memmap.push_back(ram);
-}
-
 vector<string> inputFiles;
 
 bool file_read32(uint32_t addr, uint32_t& val_out)
@@ -208,14 +171,14 @@ bool file_read32(uint32_t addr, uint32_t& val_out)
 	return true;
 }
 
-void loadFile(machine& mach, const char *filename)
+bool loadRawData(machine& mach, const char *filename)
 {
 	string fileData;
 
 	FILE *f = fopen(filename, "r");
 	if (!f) {
 		perror(filename);
-		exit(EXIT_FAILURE);
+		return false;
 	}
 	
 	char line[512];
@@ -225,7 +188,7 @@ void loadFile(machine& mach, const char *filename)
 
 	if (ferror(f)) {
 		perror(filename);
-		exit(EXIT_FAILURE);
+		return false;
 	}
 
 	fclose(f);
@@ -246,6 +209,20 @@ void loadFile(machine& mach, const char *filename)
 	fr.write32 = err_write;
 
 	mach.memmap.push_back(fr);
+
+	return true;
+}
+
+static void usage(const char *progname)
+{
+	fprintf(stderr,
+		"Usage: %s [options]\n"
+		"\n"
+		"options:\n"
+		"-e <moxie executable>\tLoad executable into address space\n"
+		"-d <file>\t\tLoad data into address space\n"
+		,
+		progname);
 }
 
 int main (int argc, char *argv[])
@@ -253,10 +230,28 @@ int main (int argc, char *argv[])
 	machine mach;
 
 	addZeroPage(mach);
-	addRam(mach);
 
-	for (int i = 1; i < argc; i++) {
-		loadFile(mach, argv[i]);
+	int opt;
+	while ((opt = getopt(argc, argv, "e:d:")) != -1) {
+		switch(opt) {
+		case 'e':
+			if (!loadElfProgram(mach, optarg)) {
+				fprintf(stderr, "ELF load failed for %s\n",
+					optarg);
+				exit(EXIT_FAILURE);
+			}
+			break;
+		case 'd':
+			if (!loadRawData(mach, optarg)) {
+				fprintf(stderr, "Data load failed for %s\n",
+					optarg);
+				exit(EXIT_FAILURE);
+			}
+			break;
+		default:
+			usage(argv[0]);
+			exit(EXIT_FAILURE);
+		}
 	}
 
 	sim_resume(mach);

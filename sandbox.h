@@ -58,6 +58,7 @@ public:
 
 extern void set_initial_gprs();
 extern void sim_resume (machine& mach, unsigned long long cpu_budget = 0);
+extern bool loadElfProgram(machine& mach, const char *filename);
 
 extern uint32_t sim_core_read_aligned_1(machine& mach,
 				     uint32_t addr);
