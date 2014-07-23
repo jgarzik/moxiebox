@@ -14,8 +14,6 @@
  * they apply.
  */
 
-#include "syscall.h"
-
 /*
  * Input:
  * $r0	-- exit value
@@ -28,6 +26,6 @@
 	.type	_exit,@function
 	.text
 _exit:
-	swi	SYS_exit 
+	swi	1	/* SYS_exit */
 .Lend:
 	.size	_exit,.Lend-_exit

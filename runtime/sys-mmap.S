@@ -33,6 +33,6 @@
 	.type	mmap,@function
 	.text
 mmap:
-	swi	SYS_mmap 
+	swi	90	/* SYS_mmap */
 .Lend:
 	.size	mmap,.Lend-mmap

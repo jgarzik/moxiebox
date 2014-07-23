@@ -23,28 +23,11 @@ _start:
 	                           for stack frame. */
 	xor	$fp, $fp	/* zero fp to allow unwinders to stop */
 
-	/* zero the bss area */
-	ldi.l	$r0, __bss_start__
-	ldi.l	$r1, __bss_end__
-	sub.l	$r1, $r0
-	sto.l	8($sp), $r1
-	ldi.l	$r1, 0
-	jsra	memset
-	inc	$sp, 12
-
-	/* Call _init to invoke static constructors, etc.  */
-	jsra	_init
-	
-	/* Call _fini at exit time for static destructors.  */
-	ldi.l	$r0, _fini
-	jsra	atexit
-	
 	/* Set argc and argv.  These are populated by the simulator.  */
 	lda.l	$r0, 0x4
 	ldi.l	$r1, 0x8
 	
 	jsra	main
-	jsra	exit
 
 .Lend:
 	.size	__start,(.Lend-__start)
