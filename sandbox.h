@@ -1,6 +1,7 @@
-#ifndef __DEMO_H__
-#define __DEMO_H__
+#ifndef __SANDBOX_H__
+#define __SANDBOX_H__
 
+#include <vector>
 #include <stdint.h>
 
 enum map_direction {
@@ -15,13 +16,42 @@ public:
 	address_word() { dummy = 0; }
 };
 
-class machine {
+class addressRange {
 public:
-	int dummy;
+	uint32_t start;
+	uint32_t end;
+	uint32_t length;
 
-	machine() { dummy = 0; }
+	bool (*read8)(uint32_t addr, uint32_t& val_out);
+	bool (*read16)(uint32_t addr, uint32_t& val_out);
+	bool (*read32)(uint32_t addr, uint32_t& val_out);
+
+	bool (*write8)(uint32_t addr, uint32_t val);
+	bool (*write16)(uint32_t addr, uint32_t val);
+	bool (*write32)(uint32_t addr, uint32_t val);
+
+	bool inRange(uint32_t addr, uint32_t len) {
+		return ((addr >= start) &&
+			((addr + len) <= end));		// warn: overflow
+	}
 };
 
+class machine {
+public:
+	std::vector<addressRange> memmap;
+
+	bool read8(uint32_t addr, uint32_t& val_out);
+	bool read16(uint32_t addr, uint32_t& val_out);
+	bool read32(uint32_t addr, uint32_t& val_out);
+
+	bool write8(uint32_t addr, uint32_t val);
+	bool write16(uint32_t addr, uint32_t val);
+	bool write32(uint32_t addr, uint32_t val);
+
+	void loadFile(const char *filename);
+};
+
+extern void set_initial_gprs();
 extern void sim_resume (machine& mach);
 
 extern uint32_t sim_core_read_aligned_1(machine& mach,
@@ -53,4 +83,4 @@ extern void sim_core_write_aligned_4(machine& mach,
 				     uint32_t addr,
 				     uint32_t val);
 
-#endif // __DEMO_H__
+#endif // __SANDBOX_H__
