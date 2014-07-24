@@ -13,6 +13,23 @@
 #define EM_MOXIE                0xFEED  /* Moxie */
 #endif // EM_MOXIE
 
+bool loadElfProgSection(machine& mach, Elf *e, GElf_Phdr *phdr, void *p)
+{
+	size_t sz = phdr->p_memsz;
+	roDataRange *rdr = new roDataRange(sz);
+	rdr->start = phdr->p_vaddr;
+	rdr->length = sz;
+	rdr->end = rdr->start + rdr->length;
+
+	char *cp = (char *) p;
+	rdr->buf.assign(cp + phdr->p_offset, phdr->p_filesz);
+	rdr->buf.resize(phdr->p_memsz);
+
+	mach.memmap.push_back(rdr);
+
+	return true;
+}
+
 bool loadElfProgram(machine& mach, const char *filename)
 {
 	if ( elf_version ( EV_CURRENT ) == EV_NONE )
@@ -68,17 +85,8 @@ bool loadElfProgram(machine& mach, const char *filename)
 			continue;
 		}
 
-		size_t sz = phdr.p_memsz;
-		roDataRange *rdr = new roDataRange(sz);
-		rdr->start = phdr.p_vaddr;
-		rdr->length = sz;
-		rdr->end = rdr->start + rdr->length;
-
-		char *cp = (char *) p;
-		rdr->buf.assign(cp + phdr.p_offset, phdr.p_filesz);
-		rdr->buf.resize(phdr.p_memsz);
-
-		mach.memmap.push_back(rdr);
+		if (!loadElfProgSection(mach, e, &phdr, p))
+			goto err_out_elf;
 	}
 
 	elf_end(e);
