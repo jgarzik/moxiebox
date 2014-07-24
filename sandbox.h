@@ -85,22 +85,22 @@ public:
 		length = 0;
 	}
 
-	bool read8(uint32_t addr, uint32_t& val_out) {
+	virtual bool read8(uint32_t addr, uint32_t& val_out) {
 		val_out = 0xffffffffU;
 		return false;
 	}
-	bool read16(uint32_t addr, uint32_t& val_out) {
+	virtual bool read16(uint32_t addr, uint32_t& val_out) {
 		val_out = 0xffffffffU;
 		return false;
 	}
-	bool read32(uint32_t addr, uint32_t& val_out) {
+	virtual bool read32(uint32_t addr, uint32_t& val_out) {
 		val_out = 0xffffffffU;
 		return false;
 	}
 
-	bool write8(uint32_t addr, uint32_t val) { return false; }
-	bool write16(uint32_t addr, uint32_t val) { return false; }
-	bool write32(uint32_t addr, uint32_t val) { return false; }
+	virtual bool write8(uint32_t addr, uint32_t val) { return false; }
+	virtual bool write16(uint32_t addr, uint32_t val) { return false; }
+	virtual bool write32(uint32_t addr, uint32_t val) { return false; }
 
 	bool inRange(uint32_t addr, uint32_t len) {
 		return ((addr >= start) &&
