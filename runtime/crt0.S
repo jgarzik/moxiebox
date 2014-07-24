@@ -33,13 +33,14 @@ _start:
 	xor	$r2, $r2
 .L1:
 	cmp	$r0, $r1
-	beq	.L2
+	bge	.L2
 	sto.l	0($r0), $r2
 	inc	$r0, 4
 	jmpa	.L1
 
 .L2:	
 	jsra	main
+	jmpa	_exit
 
 .Lend:
 	.size	__start,(.Lend-__start)

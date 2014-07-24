@@ -29,5 +29,5 @@ hand-built memory map.
 More info about the Moxie architecture may be found at
 http://moxielogic.org/wiki/index.php/Main_Page and
 http://moxielogic.org/blog/  The main code repository is
-https://github.com/atgreen/moxiedev
+https://github.com/atgreen/moxie-cores.
 
