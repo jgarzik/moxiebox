@@ -13,8 +13,7 @@
 
 using namespace std;
 
-static const uint32_t RAM_SIZE = 16 * 1024 * 1024;
-
+static const uint32_t STACK_SIZE = 64 * 1024;
 
 bool machine::read8(uint32_t addr, uint32_t& val_out)
 {
@@ -164,6 +163,19 @@ static void printMemMap(machine &mach)
 	}
 }
 
+static void addStackMem(machine& mach)
+{
+	rwDataRange *rdr = new rwDataRange(STACK_SIZE);
+
+	rdr->buf.resize(STACK_SIZE);
+
+	rdr->end = 0x400000;
+	rdr->length = STACK_SIZE;
+	rdr->start = rdr->end - rdr->length;
+
+	mach.memmap.push_back(rdr);
+}
+
 int main (int argc, char *argv[])
 {
 	machine mach;
@@ -195,6 +207,8 @@ int main (int argc, char *argv[])
 			exit(EXIT_FAILURE);
 		}
 	}
+
+	addStackMem(mach);
 
 	printMemMap(mach);
 
