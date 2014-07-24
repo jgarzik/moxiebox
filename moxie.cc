@@ -121,6 +121,7 @@ static void sim_mmap(machine& mach)
       if ((addr != 0) ||
           (length < MACH_PAGE_SIZE) ||
 	  (length & (MACH_PAGE_SIZE-1)) ||
+	  ((uint32_t)length > mach.heapAvail) ||
 	  (!(prot & MOXIE_PROT_READ)) ||
 	  (!(prot & MOXIE_PROT_WRITE)) ||
 	  (!(prot & MOXIE_PROT_EXEC)) ||
@@ -130,9 +131,15 @@ static void sim_mmap(machine& mach)
       	return;
       }
 
-      // TODO: the implementation (== malloc)
+      rwDataRange *rdr = new rwDataRange(length);
+      rdr->buf.resize(length);
 
-      cpu.asregs.regs[2] = -EINVAL;
+      if (!mach.mapInsert(rdr))
+      	cpu.asregs.regs[2] = -ENOMEM;
+      else {
+      	cpu.asregs.regs[2] = rdr->start;
+	mach.heapAvail -= length;
+      }
 }
 
 void

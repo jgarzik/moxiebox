@@ -92,6 +92,16 @@ void machine::sortMemMap()
 	std::sort(memmap.begin(), memmap.end(), memmapCmp);
 }
 
+bool machine::mapInsert(addressRange *rdr)
+{
+	addressRange *ar = memmap.back();
+	rdr->start = (ar->end + (MACH_PAGE_SIZE * 2)) & ~(MACH_PAGE_SIZE-1);
+	rdr->end = rdr->start + rdr->length;
+	memmap.push_back(rdr);
+
+	return true;
+}
+
 
 bool loadRawData(machine& mach, const char *filename)
 {
@@ -119,13 +129,7 @@ bool loadRawData(machine& mach, const char *filename)
 	munmap(p, st.st_size);
 	close(fd);
 
-	addressRange *ar = mach.memmap.back();
-	rdr->start = ar->end + (MACH_PAGE_SIZE * 2);
-	rdr->end = rdr->start + rdr->length;
-
-	mach.memmap.push_back(rdr);
-
-	return true;
+	return mach.mapInsert(rdr);
 }
 
 static void usage(const char *progname)

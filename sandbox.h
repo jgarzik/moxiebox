@@ -113,14 +113,17 @@ public:
 
 class machine {
 public:
-	uint32_t startAddr;
 	std::vector<addressRange*> memmap;
 	cpuState cpu;
+
+	uint32_t startAddr;
 	bool tracing;
+	uint32_t heapAvail;
 
 	machine() {
 		startAddr = 0;
 		tracing = false;
+		heapAvail = 0xfffffffU;
 	}
 
 	bool read8(uint32_t addr, uint32_t& val_out);
@@ -132,6 +135,7 @@ public:
 	bool write32(uint32_t addr, uint32_t val);
 
 	void sortMemMap();
+	bool mapInsert(addressRange *ar);
 };
 
 extern void sim_resume (machine& mach, unsigned long long cpu_budget = 0);
