@@ -3,7 +3,7 @@ This is a sandbox, in the spirit of Cloudius Systems' OSv.
 
 The goal is to provide a secure, sandboxed execution mechanism that
 enables deterministic input, processing and output.  Execution is
-separately out into distinct phases:
+separated out into distinct phases:
 
 1. Prepare and load hash-sealed program executables, data.
 2. Execute program as a black box, with no I/O capability.
@@ -11,8 +11,11 @@ separately out into distinct phases:
 3. Gather processed data, if any.
 
 A single thread of execution pre-loads necessary data, runs a 32-bit
-little endian Moxie ELF binary until it exits or a cycle budget is
-exhausted.  Output, if any, is noted.
+little endian Moxie ELF binary.  This program is built using the
+"moxie-elf" target in upstream binutils and gcc.  You will need to build
+and install moxie binutils+gcc cross-compiler toolset.
+	git clone git://sourceware.org/git/binutils-gdb.git
+	git clone git://gcc.gnu.org/git/gcc.git
 
 From the Moxie program's point of view, it is running as root and is
 essentially the entire operating system kernel + application, all in
