@@ -26,6 +26,7 @@ bool loadElfProgSection(machine& mach, Elf *e, GElf_Phdr *phdr, void *p)
 	rdr->buf.resize(phdr->p_memsz);
 
 	mach.memmap.push_back(rdr);
+	mach.sortMemMap();
 
 	return true;
 }

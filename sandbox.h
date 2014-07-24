@@ -105,6 +105,8 @@ public:
 	bool write8(uint32_t addr, uint32_t val);
 	bool write16(uint32_t addr, uint32_t val);
 	bool write32(uint32_t addr, uint32_t val);
+
+	void sortMemMap();
 };
 
 extern void sim_resume (machine& mach, unsigned long long cpu_budget = 0);

@@ -5,6 +5,7 @@
 #include <fcntl.h>
 #include <string>
 #include <vector>
+#include <algorithm>
 #include <string.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -80,6 +81,17 @@ bool machine::write32(uint32_t addr, uint32_t val)
 
 	return false;
 }
+
+static bool memmapCmp(addressRange *a, addressRange *b)
+{
+	return (a->start < b->start);
+}
+
+void machine::sortMemMap()
+{
+	std::sort(memmap.begin(), memmap.end(), memmapCmp);
+}
+
 
 class rwDataRange : public roDataRange {
 public:
@@ -174,6 +186,7 @@ static void addStackMem(machine& mach)
 	rdr->start = rdr->end - rdr->length;
 
 	mach.memmap.push_back(rdr);
+	mach.sortMemMap();
 }
 
 int main (int argc, char *argv[])
