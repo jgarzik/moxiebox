@@ -30,7 +30,7 @@ static uint32_t sim_core_read_aligned_1(machine& mach, uint32_t addr)
 {
 	uint32_t ret;
 	if (!mach.read8(addr, ret))
-		return 0xffffffffU;
+		mach.cpu.asregs.exception = SIGBUS;
 	return ret;
 }
 
@@ -38,7 +38,7 @@ static uint32_t sim_core_read_aligned_2(machine& mach, uint32_t addr)
 {
 	uint32_t ret;
 	if (!mach.read16(addr, ret))
-		return 0xffffffffU;
+		mach.cpu.asregs.exception = SIGBUS;
 	return ret;
 }
 
@@ -46,7 +46,7 @@ static uint32_t sim_core_read_aligned_4(machine& mach, uint32_t addr)
 {
 	uint32_t ret;
 	if (!mach.read32(addr, ret))
-		return 0xffffffffU;
+		mach.cpu.asregs.exception = SIGBUS;
 	return ret;
 }
 
@@ -55,8 +55,8 @@ static uint32_t sim_core_read_aligned_4(machine& mach, uint32_t addr)
 static void INLINE 
 wbat (machine& mach, word pc, word x, word v)
 {
-  mach.write8(x, v);
-  // TODO: handle failure
+  if (!mach.write8(x, v))
+	mach.cpu.asregs.exception = SIGBUS;
 }
 
 /* Write a 2 byte value to memory.  */
@@ -64,8 +64,8 @@ wbat (machine& mach, word pc, word x, word v)
 static void INLINE 
 wsat (machine& mach, word pc, word x, word v)
 {
-  mach.write16(x, v);
-  // TODO: handle failure
+  if (!mach.write16(x, v))
+	mach.cpu.asregs.exception = SIGBUS;
 }
 
 /* Write a 4 byte value to memory.  */
@@ -73,8 +73,8 @@ wsat (machine& mach, word pc, word x, word v)
 static void INLINE 
 wlat (machine& mach, word pc, word x, word v)
 {
-  mach.write32(x, v);
-  // TODO: handle failure
+  if (!mach.write32(x, v))
+	mach.cpu.asregs.exception = SIGBUS;
 }
 
 /* Read 2 bytes from memory.  */

@@ -214,6 +214,12 @@ int main (int argc, char *argv[])
 
 	mach.cpu.asregs.regs[PC_REGNO] = mach.startAddr;
 	sim_resume(mach);
+
+	if (mach.cpu.asregs.exception)
+		fprintf(stderr, "Sim exception %d (%s)\n",
+			mach.cpu.asregs.exception,
+			strsignal(mach.cpu.asregs.exception));
+
 	return 0;
 }
 
