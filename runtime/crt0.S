@@ -23,22 +23,8 @@ _start:
 	                           for stack frame. */
 	xor	$fp, $fp	/* zero fp to allow unwinders to stop */
 
-	/* Set argc and argv.  These are populated by the simulator.  */
-	lda.l	$r0, 0x4
-	ldi.l	$r1, 0x8
-	
-	/* Clear out BSS.  */
-	ldi.l	$r0, edata
-	ldi.l	$r1, end
-	xor	$r2, $r2
-.L1:
-	cmp	$r0, $r1
-	bge	.L2
-	sto.l	0($r0), $r2
-	inc	$r0, 4
-	jmpa	.L1
+	/* TODO: Set argc and argv. */
 
-.L2:	
 	jsra	main
 	jmpa	_exit
 
