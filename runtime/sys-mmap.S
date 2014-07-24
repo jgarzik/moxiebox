@@ -1,5 +1,5 @@
 /*
- * sim-exit.S -- _exit interface for moxie simulator
+ * sys-mmap.S -- _mmap interface for moxie simulator
  * 
  * Copyright (c) 2008 Anthony Green
  *
@@ -26,7 +26,7 @@
  * $r5	-- offset
  *
  * Output:
- * $r0	-- exit value
+ * $r0	-- mmap value
  */
 
 	.globl	mmap
@@ -34,5 +34,6 @@
 	.text
 mmap:
 	swi	90	/* SYS_mmap */
+	ret
 .Lend:
 	.size	mmap,.Lend-mmap
