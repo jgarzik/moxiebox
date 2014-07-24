@@ -161,21 +161,4 @@ public:
 extern void sim_resume (machine& mach, unsigned long long cpu_budget = 0);
 extern bool loadElfProgram(machine& mach, const char *filename);
 
-extern uint32_t sim_core_read_aligned_1(machine& mach,
-				     uint32_t addr);
-extern uint32_t sim_core_read_aligned_2(machine& mach,
-				     uint32_t addr);
-extern uint32_t sim_core_read_aligned_4(machine& mach,
-				     uint32_t addr);
-
-extern void sim_core_write_aligned_1(machine& mach,
-				     uint32_t addr,
-				     uint32_t val);
-extern void sim_core_write_aligned_2(machine& mach,
-				     uint32_t addr,
-				     uint32_t val);
-extern void sim_core_write_aligned_4(machine& mach,
-				     uint32_t addr,
-				     uint32_t val);
-
 #endif // __SANDBOX_H__

@@ -28,12 +28,37 @@ static FILE *tracefile = stdout;
 
 #define cpu mach.cpu
 
+static uint32_t sim_core_read_aligned_1(machine& mach, uint32_t addr)
+{
+	uint32_t ret;
+	if (!mach.read8(addr, ret))
+		return 0xffffffffU;
+	return ret;
+}
+
+static uint32_t sim_core_read_aligned_2(machine& mach, uint32_t addr)
+{
+	uint32_t ret;
+	if (!mach.read16(addr, ret))
+		return 0xffffffffU;
+	return ret;
+}
+
+static uint32_t sim_core_read_aligned_4(machine& mach, uint32_t addr)
+{
+	uint32_t ret;
+	if (!mach.read32(addr, ret))
+		return 0xffffffffU;
+	return ret;
+}
+
 /* Write a 1 byte value to memory.  */
 
 static void INLINE 
 wbat (machine& mach, word pc, word x, word v)
 {
-  sim_core_write_aligned_1 (mach, x, v);
+  mach.write8(x, v);
+  // TODO: handle failure
 }
 
 /* Write a 2 byte value to memory.  */
@@ -41,7 +66,8 @@ wbat (machine& mach, word pc, word x, word v)
 static void INLINE 
 wsat (machine& mach, word pc, word x, word v)
 {
-  sim_core_write_aligned_2 (mach, x, v);
+  mach.write16(x, v);
+  // TODO: handle failure
 }
 
 /* Write a 4 byte value to memory.  */
@@ -49,7 +75,8 @@ wsat (machine& mach, word pc, word x, word v)
 static void INLINE 
 wlat (machine& mach, word pc, word x, word v)
 {
-  sim_core_write_aligned_4 (mach, x, v);
+  mach.write32(x, v);
+  // TODO: handle failure
 }
 
 /* Read 2 bytes from memory.  */

@@ -15,57 +15,6 @@ using namespace std;
 
 static const uint32_t RAM_SIZE = 16 * 1024 * 1024;
 
-uint32_t sim_core_read_aligned_1(machine& mach,
-				     uint32_t addr)
-{
-	uint32_t ret;
-	if (!mach.read8(addr, ret))
-		return 0xffffffffU;
-	return ret;
-}
-
-uint32_t sim_core_read_aligned_2(machine& mach,
-				     uint32_t addr)
-{
-	uint32_t ret;
-	if (!mach.read16(addr, ret))
-		return 0xffffffffU;
-	return ret;
-}
-
-uint32_t sim_core_read_aligned_4(machine& mach,
-				     uint32_t addr)
-{
-	uint32_t ret;
-	if (!mach.read32(addr, ret))
-		return 0xffffffffU;
-	return ret;
-}
-
-
-void sim_core_write_aligned_1(machine& mach,
-				     uint32_t addr,
-				     uint32_t val)
-{
-	mach.write8(addr, val);
-	// FIXME handle failure
-}
-
-void sim_core_write_aligned_2(machine& mach,
-				     uint32_t addr,
-				     uint32_t val)
-{
-	mach.write16(addr, val);
-	// FIXME handle failure
-}
-
-void sim_core_write_aligned_4(machine& mach,
-				     uint32_t addr,
-				     uint32_t val)
-{
-	mach.write32(addr, val);
-	// FIXME handle failure
-}
 
 bool machine::read8(uint32_t addr, uint32_t& val_out)
 {
