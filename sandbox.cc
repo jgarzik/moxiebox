@@ -93,31 +93,6 @@ void machine::sortMemMap()
 }
 
 
-class rwDataRange : public roDataRange {
-public:
-	rwDataRange(size_t sz) : roDataRange(sz) {
-		name = "rw";
-		start = 0;
-		end = 0;
-		length = sz;
-	}
-
-	bool write8(uint32_t addr, uint32_t val_in) {
-		uint8_t val = val_in;
-		memcpy(&buf[addr], &val, sizeof(val));
-		return true;
-	}
-	bool write16(uint32_t addr, uint32_t val_in) {
-		uint16_t val = val_in;
-		memcpy(&buf[addr], &val, sizeof(val));
-		return true;
-	}
-	bool write32(uint32_t addr, uint32_t val_in) {
-		memcpy(&buf[addr], &val_in, sizeof(val_in));
-		return true;
-	}
-};
-
 bool loadRawData(machine& mach, const char *filename)
 {
 	int fd;

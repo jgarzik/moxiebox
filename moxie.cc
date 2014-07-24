@@ -103,6 +103,38 @@ rlat (machine& mach, word pc, word x)
 
 #define TRACE(str) if (mach.tracing) fprintf(tracefile,"0x%08x, %s, 0x%x, 0x%x, 0x%x, 0x%x, 0x%x, 0x%x, 0x%x, 0x%x, 0x%x, 0x%x, 0x%x, 0x%x, 0x%x, 0x%x, 0x%x, 0x%x\n", opc, str, cpu.asregs.regs[0], cpu.asregs.regs[1], cpu.asregs.regs[2], cpu.asregs.regs[3], cpu.asregs.regs[4], cpu.asregs.regs[5], cpu.asregs.regs[6], cpu.asregs.regs[7], cpu.asregs.regs[8], cpu.asregs.regs[9], cpu.asregs.regs[10], cpu.asregs.regs[11], cpu.asregs.regs[12], cpu.asregs.regs[13], cpu.asregs.regs[14], cpu.asregs.regs[15]);
 
+static void sim_mmap(machine& mach)
+{
+      cpuState& cpu = mach.cpu;
+
+      uint32_t addr = cpu.asregs.regs[2];
+      int32_t length = cpu.asregs.regs[3];
+      int32_t prot = cpu.asregs.regs[4];
+      int32_t flags = cpu.asregs.regs[5];
+      int32_t fd = cpu.asregs.regs[6];
+      int32_t offset = cpu.asregs.regs[7];
+
+      // ignore fd, offset
+      (void) fd;
+      (void) offset;
+
+      if ((addr != 0) ||
+          (length < MACH_PAGE_SIZE) ||
+	  (length & (MACH_PAGE_SIZE-1)) ||
+	  (!(prot & MOXIE_PROT_READ)) ||
+	  (!(prot & MOXIE_PROT_WRITE)) ||
+	  (!(prot & MOXIE_PROT_EXEC)) ||
+	  (!(flags & MOXIE_MAP_PRIVATE)) ||
+	  (!(flags & MOXIE_MAP_ANONYMOUS))) {
+      	cpu.asregs.regs[2] = -EINVAL;
+      	return;
+      }
+
+      // TODO: the implementation (== malloc)
+
+      cpu.asregs.regs[2] = -EINVAL;
+}
+
 void
 sim_resume (machine& mach, unsigned long long cpu_budget)
 {
@@ -724,32 +756,7 @@ sim_resume (machine& mach, unsigned long long cpu_budget)
 
 		  case 90: /* SYS_mmap */
 		    {
-		      uint32_t addr = cpu.asregs.regs[2];
-		      int32_t length = cpu.asregs.regs[3];
-		      int32_t prot = cpu.asregs.regs[4];
-		      int32_t flags = cpu.asregs.regs[5];
-		      int32_t fd = cpu.asregs.regs[6];
-		      int32_t offset = cpu.asregs.regs[7];
-
-		      // ignore fd, offset
-		      (void) fd;
-		      (void) offset;
-
-		      if ((addr != 0) ||
-		          (length < MACH_PAGE_SIZE) ||
-			  (length & (MACH_PAGE_SIZE-1)) ||
-			  (!(prot & MOXIE_PROT_READ)) ||
-			  (!(prot & MOXIE_PROT_WRITE)) ||
-			  (!(prot & MOXIE_PROT_EXEC)) ||
-			  (!(flags & MOXIE_MAP_PRIVATE)) ||
-			  (!(flags & MOXIE_MAP_ANONYMOUS))) {
-		      	cpu.asregs.regs[2] = -EINVAL;
-		      	break;
-		      }
-
-		      // TODO: the implementation (== malloc)
-
-		      cpu.asregs.regs[2] = -EINVAL;
+		      sim_mmap(mach);
 		      break;
 		    }
 
