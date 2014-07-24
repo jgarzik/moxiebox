@@ -26,8 +26,6 @@ static FILE *tracefile = stdout;
    + (sim_core_read_aligned_1 (mach, addr+2) << 16) \
    + (sim_core_read_aligned_1 (mach, addr+3) << 24) )
 
-#define cpu mach.cpu
-
 static uint32_t sim_core_read_aligned_1(machine& mach, uint32_t addr)
 {
 	uint32_t ret;
@@ -113,6 +111,7 @@ sim_resume (machine& mach, unsigned long long cpu_budget)
   word pc, opc;
   unsigned long long insts;
   unsigned short inst;
+  cpuState& cpu = mach.cpu;
 
   cpu.asregs.exception = step ? SIGTRAP: 0;
   pc = cpu.asregs.regs[PC_REGNO];
