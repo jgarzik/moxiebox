@@ -243,6 +243,7 @@ int main (int argc, char *argv[])
 
 	printMemMap(mach);
 
+	mach.cpu.asregs.regs[PC_REGNO] = mach.startAddr;
 	sim_resume(mach);
 	return 0;
 }
