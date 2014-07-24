@@ -201,6 +201,7 @@ static void usage(const char *progname)
 		"options:\n"
 		"-e <moxie executable>\tLoad executable into address space\n"
 		"-d <file>\t\tLoad data into address space\n"
+		"-t\t\tEnabling simulator tracing\n"
 		,
 		progname);
 }
@@ -219,7 +220,7 @@ int main (int argc, char *argv[])
 	machine mach;
 
 	int opt;
-	while ((opt = getopt(argc, argv, "e:d:")) != -1) {
+	while ((opt = getopt(argc, argv, "e:d:t")) != -1) {
 		switch(opt) {
 		case 'e':
 			if (!loadElfProgram(mach, optarg)) {
@@ -235,6 +236,11 @@ int main (int argc, char *argv[])
 				exit(EXIT_FAILURE);
 			}
 			break;
+
+		case 't':
+			mach.tracing = true;
+			break;
+
 		default:
 			usage(argv[0]);
 			exit(EXIT_FAILURE);

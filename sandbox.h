@@ -142,6 +142,12 @@ public:
 	uint32_t startAddr;
 	std::vector<addressRange*> memmap;
 	cpuState cpu;
+	bool tracing;
+
+	machine() {
+		startAddr = 0;
+		tracing = false;
+	}
 
 	bool read8(uint32_t addr, uint32_t& val_out);
 	bool read16(uint32_t addr, uint32_t& val_out);
