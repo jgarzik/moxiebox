@@ -23,7 +23,9 @@ _start:
 	                           for stack frame. */
 	xor	$fp, $fp	/* zero fp to allow unwinders to stop */
 
-	/* TODO: Set argc and argv. */
+	/* Set argc and argv. */
+	xor $r0, $r0
+	xor $r1, $r1
 
 	jsra	main
 	jmpa	_exit
