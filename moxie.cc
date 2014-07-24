@@ -724,12 +724,12 @@ sim_resume (machine& mach, unsigned long long cpu_budget)
 
 		  case 90: /* SYS_mmap */
 		    {
-		      uint32_t addr = cpu.asregs.regs[0];
-		      int32_t length = cpu.asregs.regs[1];
-		      int32_t prot = cpu.asregs.regs[2];
-		      int32_t flags = cpu.asregs.regs[3];
-		      int32_t fd = cpu.asregs.regs[4];
-		      int32_t offset = cpu.asregs.regs[5];
+		      uint32_t addr = cpu.asregs.regs[2];
+		      int32_t length = cpu.asregs.regs[3];
+		      int32_t prot = cpu.asregs.regs[4];
+		      int32_t flags = cpu.asregs.regs[5];
+		      int32_t fd = cpu.asregs.regs[6];
+		      int32_t offset = cpu.asregs.regs[7];
 
 		      // ignore fd, offset
 		      (void) fd;
@@ -743,13 +743,13 @@ sim_resume (machine& mach, unsigned long long cpu_budget)
 			  (!(prot & MOXIE_PROT_EXEC)) ||
 			  (!(flags & MOXIE_MAP_PRIVATE)) ||
 			  (!(flags & MOXIE_MAP_ANONYMOUS))) {
-		      	cpu.asregs.regs[0] = -EINVAL;
+		      	cpu.asregs.regs[2] = -EINVAL;
 		      	break;
 		      }
 
 		      // TODO: the implementation (== malloc)
 
-		      cpu.asregs.regs[0] = -EINVAL;
+		      cpu.asregs.regs[2] = -EINVAL;
 		      break;
 		    }
 
