@@ -14,9 +14,10 @@ A single thread of execution pre-loads necessary data, runs a 32-bit
 little endian Moxie ELF binary.  This program is built using the
 "moxie-elf" target in upstream binutils and gcc.  You will need to build
 and install moxie binutils+gcc cross-compiler toolset.
+```
 	git clone git://sourceware.org/git/binutils-gdb.git
 	git clone git://gcc.gnu.org/git/gcc.git
-
+```
 From the Moxie program's point of view, it is running as root and is
 essentially the entire operating system kernel + application, all in
 a single wrapper.
