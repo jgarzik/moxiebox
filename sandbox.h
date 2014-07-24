@@ -120,10 +120,16 @@ public:
 	}
 
 	bool read8(uint32_t addr, uint32_t& val_out) {
-		return read32(addr, val_out);
+		uint8_t val8;
+		memcpy(&val8, &buf[addr], sizeof(val8));
+		val_out = val8;
+		return true;
 	}
 	bool read16(uint32_t addr, uint32_t& val_out) {
-		return read32(addr, val_out);
+		uint16_t val16;
+		memcpy(&val16, &buf[addr], sizeof(val16));
+		val_out = val16;
+		return true;
 	}
 	bool read32(uint32_t addr, uint32_t& val_out) {
 		memcpy(&val_out, &buf[addr], sizeof(val_out));
