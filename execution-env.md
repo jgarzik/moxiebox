@@ -42,8 +42,8 @@ via _exit().
 Phase 3: collect output
 -----------------------
 The program prepares its output in a contiguous memory buffer.  The
-pointer (virtual address) to this buffer is stored in special register
-#6.  The length of the buffer is stored in special register #7.
+pointer (virtual address) to this buffer is stored in special
+register #6.  The length of the buffer is stored in special register #7.
 
 The setreturn() function handles this task.
 
