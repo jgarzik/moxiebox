@@ -1,5 +1,5 @@
 /*
- * sim-exit.S -- _exit interface for moxie simulator
+ * sys-_exit.S -- _exit interface for moxie simulator
  * 
  * Copyright (c) 2008 Anthony Green
  *
