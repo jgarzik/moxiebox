@@ -84,6 +84,34 @@ static void addStackMem(machine& mach)
 	mach.sortMemMap();
 }
 
+static void addMapDescriptor(machine& mach)
+{
+	vector<struct mach_memmap_ent> desc;
+	mach.fillDescriptors(desc);
+
+	struct mach_memmap_ent mme_end;
+	memset(&mme_end, 0, sizeof(mme_end));
+	desc.push_back(mme_end);
+
+	size_t sz = sizeof(mme_end) * desc.size();
+	addressRange *ar = new addressRange(sz);
+	ar->buf.resize(sz);
+	ar->updateRoot();
+
+	unsigned int i = 0;
+	for (vector<struct mach_memmap_ent>::iterator it = desc.begin();
+	     it != desc.end(); it++, i++) {
+		struct mach_memmap_ent& mme = (*it);
+		memcpy(&ar->buf[i * sizeof(mme)], &mme, sizeof(mme));
+	}
+
+	ar->start = 0x400000 + MACH_PAGE_SIZE;
+	ar->end = ar->start + ar->length;
+
+	mach.memmap.push_back(ar);
+	mach.sortMemMap();
+}
+
 int main (int argc, char *argv[])
 {
 	machine mach;
@@ -117,6 +145,7 @@ int main (int argc, char *argv[])
 	}
 
 	addStackMem(mach);
+	addMapDescriptor(mach);
 
 	printMemMap(mach);
 

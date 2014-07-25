@@ -11,6 +11,12 @@ enum {
 	MACH_PAGE_SIZE = 4096,
 };
 
+struct mach_memmap_ent {
+	uint32_t vaddr;
+	uint32_t length;
+	char tags[32 - 4 - 4];
+};
+
 class cpuState {
 public:
 	struct moxie_regset asregs;
@@ -76,6 +82,7 @@ public:
 	void *physaddr(uint32_t addr, size_t objLen, bool wantWrite = false);
 	void sortMemMap();
 	bool mapInsert(addressRange *ar);
+	void fillDescriptors(std::vector<struct mach_memmap_ent>& desc);
 };
 
 extern void sim_resume (machine& mach, unsigned long long cpu_budget = 0);

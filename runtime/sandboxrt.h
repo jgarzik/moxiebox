@@ -1,6 +1,12 @@
 #ifndef __SANDBOXRT_H__
 #define __SANDBOXRT_H__
 
+struct moxie_memory_map_ent {
+	void *addr;
+	size_t length;
+	char tags[32 - 4 - 4];
+};
+
 // TODO: check w/ ABI
 enum moxie_mmap_prot_flags {
 	MOXIE_PROT_EXEC = (1U << 0),

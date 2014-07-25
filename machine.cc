@@ -1,5 +1,6 @@
 
 #include <algorithm>
+#include <string.h>
 #include "sandbox.h"
 
 void *machine::physaddr(uint32_t addr, size_t objLen, bool wantWrite)
@@ -94,5 +95,20 @@ bool machine::mapInsert(addressRange *rdr)
 	memmap.push_back(rdr);
 
 	return true;
+}
+
+void machine::fillDescriptors(std::vector<struct mach_memmap_ent>& desc)
+{
+	for (unsigned int i = 0; i < memmap.size(); i++) {
+		addressRange* ar = memmap[i];
+
+		struct mach_memmap_ent mme;
+		mme.vaddr = ar->start;
+		mme.length = ar->length;
+		memset(&mme.tags, 0, sizeof(mme.tags));
+		strncpy(mme.tags, ar->readOnly ? "ro" : "rw", sizeof(mme.tags));
+
+		desc.push_back(mme);
+	}
 }
 
