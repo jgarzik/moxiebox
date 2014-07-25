@@ -132,7 +132,11 @@ static void sim_mmap(machine& mach)
       	return;
       }
 
-      addressRange *rdr = new addressRange("heap", length);
+      static unsigned int heapCount = 0;
+      char tmpstr[32];
+
+      sprintf(tmpstr, "heap%u", heapCount++);
+      addressRange *rdr = new addressRange(tmpstr, length);
       rdr->buf.resize(length);
       rdr->updateRoot();
       rdr->readOnly = false;

@@ -35,7 +35,11 @@ bool loadRawData(machine& mach, const char *filename)
 		return false;
 	}
 
-	addressRange *rdr = new addressRange("data", st.st_size);
+	static unsigned int dataCount = 0;
+	char tmpstr[32];
+
+	sprintf(tmpstr, "data%u", dataCount++);
+	addressRange *rdr = new addressRange(tmpstr, st.st_size);
 
 	rdr->buf.assign((char *) p, (size_t) st.st_size);
 	rdr->updateRoot();
