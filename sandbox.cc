@@ -115,7 +115,7 @@ static void addMapDescriptor(machine& mach)
 
 	// build entry for global memory map
 	addressRange *ar = new addressRange("mapdesc", sz);
-	ar->start = 0x400000 + MACH_PAGE_SIZE;
+	ar->start = MACH_MEMMAP_ADDR;
 	ar->end = ar->start + ar->length;
 
 	// allocate space for descriptor array

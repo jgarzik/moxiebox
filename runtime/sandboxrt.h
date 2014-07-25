@@ -10,8 +10,8 @@ struct moxie_memory_map_ent {
 };
 
 enum {
-	MOXIE_PAGE_SIZE = 4096U,
-	MOXIE_MEMMAP_ADDR = 0x400000U + MOXIE_PAGE_SIZE,
+	MACH_PAGE_SIZE = 4096U,
+	MACH_MEMMAP_ADDR = 0x3d0000U,
 };
 
 // TODO: check w/ ABI

@@ -10,6 +10,7 @@
 enum {
 	MACH_PAGE_SIZE = 4096,
 	MACH_PAGE_MASK = (MACH_PAGE_SIZE-1),
+	MACH_MEMMAP_ADDR = 0x3d0000U,
 };
 
 struct mach_memmap_ent {
