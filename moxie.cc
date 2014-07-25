@@ -121,7 +121,7 @@ static void sim_mmap(machine& mach)
 
       if ((addr != 0) ||
           (length < MACH_PAGE_SIZE) ||
-	  (length & (MACH_PAGE_SIZE-1)) ||
+	  (length & MACH_PAGE_MASK) ||
 	  ((uint32_t)length > mach.heapAvail) ||
 	  (!(prot & MOXIE_PROT_READ)) ||
 	  (!(prot & MOXIE_PROT_WRITE)) ||

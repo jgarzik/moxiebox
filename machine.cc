@@ -90,7 +90,7 @@ void machine::sortMemMap()
 bool machine::mapInsert(addressRange *rdr)
 {
 	addressRange *ar = memmap.back();
-	rdr->start = (ar->end + (MACH_PAGE_SIZE * 2)) & ~(MACH_PAGE_SIZE-1);
+	rdr->start = ar->end + MACH_PAGE_SIZE;
 	rdr->end = rdr->start + rdr->length;
 	memmap.push_back(rdr);
 
