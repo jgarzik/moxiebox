@@ -23,7 +23,7 @@ PKG_PROG_PKG_CONFIG
 
 AC_LANG_PUSH([C++])
 
-AC_CHECK_LIB(elf, elf_getphdrnum, ELF_LIBS=-lelf)
+AC_CHECK_LIB(elf, elf_getphdrnum, ELF_LIBS=-lelf,AC_MSG_ERROR([Libelf is required to build this package!]))
 
 AC_SUBST(ELF_LIBS)
 
