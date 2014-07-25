@@ -9,6 +9,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <unistd.h>
+#include <signal.h>
 #include "sandbox.h"
 
 using namespace std;
@@ -58,6 +59,7 @@ static void usage(const char *progname)
 		"options:\n"
 		"-e <moxie executable>\tLoad executable into address space\n"
 		"-d <file>\t\tLoad data into address space\n"
+		"-o <file>\t\tOutput data to <file>.  \"-\" for stdout\n"
 		"-t\t\tEnabling simulator tracing\n"
 		,
 		progname);
@@ -135,12 +137,57 @@ static void addMapDescriptor(machine& mach)
 	mach.cpu.asregs.sregs[6] = ar->start;
 }
 
+static void gatherOutput(machine& mach, const string& outFilename)
+{
+	if (!outFilename.size())
+		return;
+
+	uint32_t vaddr = mach.cpu.asregs.sregs[6];
+	uint32_t length = mach.cpu.asregs.sregs[7];
+	if (!vaddr || !length)
+		return;
+
+	char *p = (char *) mach.physaddr(vaddr, length);
+	if (!p) {
+		fprintf(stderr, "Sim exception %d (%s) upon output\n",
+			SIGBUS,
+			strsignal(SIGBUS));
+		exit(EXIT_FAILURE);
+	}
+
+	int fd;
+	if (outFilename == "-") {
+		fd = STDOUT_FILENO;
+	} else {
+		fd = open(outFilename.c_str(),
+			  O_WRONLY | O_CREAT | O_TRUNC, 0666);
+		if (fd < 0) {
+			perror(outFilename.c_str());
+			exit(EXIT_FAILURE);
+		}
+	}
+
+	while (length > 0) {
+		ssize_t bytes = write(fd, p, length);
+		if (bytes < 0) {
+			perror(outFilename.c_str());
+			exit(EXIT_FAILURE);
+		}
+
+		length -= bytes;
+		p += bytes;
+	}
+
+	close(fd);
+}
+
 int main (int argc, char *argv[])
 {
 	machine mach;
 
+	string outFilename;
 	int opt;
-	while ((opt = getopt(argc, argv, "e:d:t")) != -1) {
+	while ((opt = getopt(argc, argv, "e:d:o:t")) != -1) {
 		switch(opt) {
 		case 'e':
 			if (!loadElfProgram(mach, optarg)) {
@@ -155,6 +202,10 @@ int main (int argc, char *argv[])
 					optarg);
 				exit(EXIT_FAILURE);
 			}
+			break;
+
+		case 'o':
+			outFilename = optarg;
 			break;
 
 		case 't':
@@ -175,10 +226,14 @@ int main (int argc, char *argv[])
 	mach.cpu.asregs.regs[PC_REGNO] = mach.startAddr;
 	sim_resume(mach);
 
-	if (mach.cpu.asregs.exception)
+	if (mach.cpu.asregs.exception) {
 		fprintf(stderr, "Sim exception %d (%s)\n",
 			mach.cpu.asregs.exception,
 			strsignal(mach.cpu.asregs.exception));
+
+		if (mach.cpu.asregs.exception == SIGQUIT)
+			gatherOutput(mach, outFilename);
+	}
 
 	return 0;
 }
