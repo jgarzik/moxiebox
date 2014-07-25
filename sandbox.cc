@@ -68,7 +68,7 @@ static void printMemMap(machine &mach)
 {
 	for (unsigned int i = 0; i < mach.memmap.size(); i++) {
 		addressRange *ar = mach.memmap[i];
-		fprintf(stdout, "%s %08x-%08x %s\n",
+		fprintf(stderr, "%s %08x-%08x %s\n",
 			ar->readOnly ? "ro" : "rw", ar->start, ar->end,
 			ar->name.c_str());
 	}

@@ -15,7 +15,7 @@
 
 #define INLINE inline
 
-static FILE *tracefile = stdout;
+static FILE *tracefile = stderr;
 
 /* Extract the signed 10-bit offset from a 16-bit branch
    instruction.  */

@@ -76,7 +76,7 @@ bool loadElfProgram(machine& mach, const char *filename)
 	}
 
 	mach.startAddr = ehdr.e_entry;
-	fprintf(stdout, "ep %08lx\n", ehdr.e_entry);
+	fprintf(stderr, "ep %08lx\n", ehdr.e_entry);
 
 	size_t n;
 	if ( elf_getphdrnum (e , & n ) != 0)
