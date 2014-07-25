@@ -30,6 +30,7 @@ enum moxie_mmap_flags {
 };
 
 extern struct moxie_memory_map_ent *moxie_memmap;
+extern void setreturn(void *addr, size_t length);
 extern void _exit(int status);
 extern void *mmap(void *addr, size_t length, int prot, int flags,
 		  int fd, /*off_t*/ int offset);

@@ -19,6 +19,8 @@ static void do_accesses(void)
 	c[10] = 30;
 	c[20] = 60;
 	c[100] = 99;
+
+	setreturn(&c[100], 1);
 }
 
 static int do_memmap_accesses(void)

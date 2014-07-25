@@ -294,9 +294,28 @@ sim_resume (machine& mach, unsigned long long cpu_budget)
 		case 0x03: /* ssr */
 		  {
 		    int a = (inst >> 8) & 0xf;
-		    unsigned v = (inst & 0xff);
+		    unsigned sreg = (inst & 0xff);
+		    int32_t sval = cpu.asregs.regs[a];
+
 		    TRACE("ssr");
-		    cpu.asregs.sregs[v] = cpu.asregs.regs[a];
+		    switch (sreg) {
+		    case 6:	/* sim return buf addr */
+			if (!mach.physaddr(sval, 1))
+		  		cpu.asregs.exception = SIGBUS;
+			else
+		        	cpu.asregs.sregs[sreg] = sval;
+		    	break;
+		    case 7:	/* sim return buf length */
+			if (!cpu.asregs.sregs[6] ||
+			    !mach.physaddr(cpu.asregs.sregs[6], sval))
+		  		cpu.asregs.exception = SIGBUS;
+			else
+		        	cpu.asregs.sregs[sreg] = sval;
+		    	break;
+		    default:
+		        cpu.asregs.sregs[sreg] = sval;
+		    	break;
+		    }
 		  }
 		  break;
 		default:

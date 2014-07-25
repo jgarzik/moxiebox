@@ -1,12 +1,14 @@
 #!/bin/sh -x
 
 moxie-elf-as -EL -o crt0.o crt0.S
+moxie-elf-as -EL -o setreturn.o setreturn.S
 moxie-elf-as -EL -o sys-_exit.o sys-_exit.S
 moxie-elf-as -EL -o sys-mmap.o sys-mmap.S
 moxie-elf-gcc -Wall -O -mel -static -nostdlib -c memmap.c
 moxie-elf-ar rvs --target=elf32-littlemoxie libsandboxrt.a \
 	crt0.o \
 	memmap.o \
+	setreturn.o \
 	sys-_exit.o \
 	sys-mmap.o
 
