@@ -14,6 +14,7 @@
 using namespace std;
 
 static const uint32_t STACK_SIZE = 64 * 1024;
+static const uint32_t STACK_VADDR = 0x400000;
 
 
 bool loadRawData(machine& mach, const char *filename)
@@ -81,7 +82,7 @@ static void addStackMem(machine& mach)
 	rdr->updateRoot();
 	rdr->readOnly = false;
 
-	rdr->end = 0x400000;
+	rdr->end = STACK_VADDR;
 	rdr->length = STACK_SIZE;
 	rdr->start = rdr->end - rdr->length;
 
@@ -109,7 +110,7 @@ static void addMapDescriptor(machine& mach)
 	size_t sz = sizeof(mme_end) * desc.size();
 
 	// manually fill in mapdesc range descriptor
-	mme_self.vaddr = 0x400000 + MACH_PAGE_SIZE;
+	mme_self.vaddr = MACH_MEMMAP_ADDR;
 	mme_self.length = sz;
 	strcpy(mme_self.tags, "ro,mapdesc,");
 
