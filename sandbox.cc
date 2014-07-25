@@ -60,7 +60,7 @@ static void usage(const char *progname)
 		"-e <moxie executable>\tLoad executable into address space\n"
 		"-d <file>\t\tLoad data into address space\n"
 		"-o <file>\t\tOutput data to <file>.  \"-\" for stdout\n"
-		"-t\t\tEnabling simulator tracing\n"
+		"-t\t\t\tEnabling simulator tracing\n"
 		,
 		progname);
 }
@@ -185,6 +185,7 @@ int main (int argc, char *argv[])
 {
 	machine mach;
 
+	bool progLoaded = false;
 	string outFilename;
 	int opt;
 	while ((opt = getopt(argc, argv, "e:d:o:t")) != -1) {
@@ -195,6 +196,7 @@ int main (int argc, char *argv[])
 					optarg);
 				exit(EXIT_FAILURE);
 			}
+			progLoaded = true;
 			break;
 		case 'd':
 			if (!loadRawData(mach, optarg)) {
@@ -216,6 +218,12 @@ int main (int argc, char *argv[])
 			usage(argv[0]);
 			exit(EXIT_FAILURE);
 		}
+	}
+
+	if (!progLoaded) {
+		fprintf(stderr, "No Moxie program loaded.\n");
+		usage(argv[0]);
+		exit(EXIT_FAILURE);
 	}
 
 	addStackMem(mach);
