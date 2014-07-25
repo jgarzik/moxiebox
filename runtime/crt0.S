@@ -1,6 +1,7 @@
-/* crt0.S -- startup file for moxie
+/* crt0.S -- startup file for moxiebox
  * 
  * Copyright (c) 2008, 2009, 2014  Anthony Green
+ * Copyright 2014 BitPay, Inc.
  *
  * The authors hereby grant permission to use, copy, modify, distribute,
  * and license this software and its documentation for any purpose, provided
@@ -19,15 +20,17 @@
 	.type	__start,@function
 __start:
 _start:
-	ldi.l	$sp, (_stack-12)/* load up stack pointer with space
-	                           for stack frame. */
-	xor	$fp, $fp	/* zero fp to allow unwinders to stop */
+	/* zero fp to allow unwinders to stop */
+	xor	$fp, $fp
 
 	/* load sim memory descriptor base address */
 	gsr	$r0, 6
 	sta.l	moxie_memmap, $r0
 
-	/* Set argc and argv. */
+	/* load sim stack pointer */
+	gsr	$sp, 7
+
+	/* Set argc and argv (empty). */
 	xor	$r0, $r0
 	xor	$r1, $r1
 

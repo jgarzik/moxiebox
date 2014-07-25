@@ -14,7 +14,6 @@
 using namespace std;
 
 static const uint32_t STACK_SIZE = 64 * 1024;
-static const uint32_t STACK_VADDR = 0x400000;
 
 
 bool loadRawData(machine& mach, const char *filename)
@@ -76,18 +75,18 @@ static void printMemMap(machine &mach)
 
 static void addStackMem(machine& mach)
 {
+	// alloc r/w memory range
 	addressRange *rdr = new addressRange("stack", STACK_SIZE);
 
 	rdr->buf.resize(STACK_SIZE);
 	rdr->updateRoot();
 	rdr->readOnly = false;
 
-	rdr->end = STACK_VADDR;
-	rdr->length = STACK_SIZE;
-	rdr->start = rdr->end - rdr->length;
+	// add memory range to global memory map
+	mach.mapInsert(rdr);
 
-	mach.memmap.push_back(rdr);
-	mach.sortMemMap();
+	// set SR #7 to now-initialized stack vaddr
+	mach.cpu.asregs.sregs[7] = rdr->end;
 }
 
 static void addMapDescriptor(machine& mach)
