@@ -10,6 +10,7 @@
 #include <stdlib.h>
 #include <signal.h>
 #include <errno.h>
+#include <endian.h>
 #include "sandbox.h"
 
 #define INLINE inline
@@ -20,18 +21,25 @@ static FILE *tracefile = stdout;
    instruction.  */
 #define INST2OFFSET(o) ((((signed short)((o & ((1<<10)-1))<<6))>>6)<<1)
 
-#define EXTRACT_WORD(addr) \
-  (  (sim_core_read_aligned_1 (mach, addr)) \
-   + (sim_core_read_aligned_1 (mach, addr+1) << 8) \
-   + (sim_core_read_aligned_1 (mach, addr+2) << 16) \
-   + (sim_core_read_aligned_1 (mach, addr+3) << 24) )
+#define EXTRACT_WORD(addr) extract_word32(mach, addr)
+#define EXTRACT_WORD16(addr) extract_word16(mach, addr)
 
-static uint32_t sim_core_read_aligned_1(machine& mach, uint32_t addr)
+static inline uint16_t extract_word16(machine& mach, uint32_t addr)
 {
 	uint32_t ret;
-	if (!mach.read8(addr, ret))
+	if (!mach.read16(addr, ret))
 		mach.cpu.asregs.exception = SIGBUS;
-	return ret;
+
+	uint16_t ret16 = (uint16_t) ret;
+	return le16toh(ret16);
+}
+
+static inline uint32_t extract_word32(machine& mach, uint32_t addr)
+{
+	uint32_t ret;
+	if (!mach.read32(addr, ret))
+		mach.cpu.asregs.exception = SIGBUS;
+	return le32toh(ret);
 }
 
 static uint32_t sim_core_read_aligned_2(machine& mach, uint32_t addr)
@@ -88,9 +96,12 @@ rsat (machine& mach, word pc, word x)
 /* Read 1 byte from memory.  */
 
 static int INLINE 
-rbat (machine& mach, word pc, word x)
+rbat (machine& mach, word pc, word addr)
 {
-  return (sim_core_read_aligned_1 (mach, x));
+	uint32_t ret;
+	if (!mach.read8(addr, ret))
+		mach.cpu.asregs.exception = SIGBUS;
+	return (int32_t) ret;
 }
 
 /* Read 4 bytes from memory.  */
@@ -162,8 +173,7 @@ sim_resume (machine& mach, unsigned long long cpu_budget)
       opc = pc;
 
       /* Fetch the instruction at pc.  */
-      inst = ((sim_core_read_aligned_1 (mach, pc))
-	    + (sim_core_read_aligned_1 (mach, pc+1) << 8));
+      inst = EXTRACT_WORD16(pc);
 
       /* Decode instruction.  */
       if (inst & (1 << 15))
