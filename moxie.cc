@@ -45,34 +45,34 @@ static inline uint32_t extract_word32(machine& mach, uint32_t addr)
 /* Write a 1 byte value to memory.  */
 
 static void INLINE 
-wbat (machine& mach, word pc, word x, word v)
+wbat (machine& mach, word addr, word v)
 {
-  if (!mach.write8(x, v))
+  if (!mach.write8(addr, v))
 	mach.cpu.asregs.exception = SIGBUS;
 }
 
 /* Write a 2 byte value to memory.  */
 
 static void INLINE 
-wsat (machine& mach, word pc, word x, word v)
+wsat (machine& mach, word addr, word v)
 {
-  if (!mach.write16(x, v))
+  if (!mach.write16(addr, v))
 	mach.cpu.asregs.exception = SIGBUS;
 }
 
 /* Write a 4 byte value to memory.  */
 
 static void INLINE 
-wlat (machine& mach, word pc, word x, word v)
+wlat (machine& mach, word addr, word v)
 {
-  if (!mach.write32(x, v))
+  if (!mach.write32(addr, v))
 	mach.cpu.asregs.exception = SIGBUS;
 }
 
 /* Read 2 bytes from memory.  */
 
 static int INLINE 
-rsat (machine& mach, word pc, word addr)
+rsat (machine& mach, word addr)
 {
 	uint32_t ret;
 	if (!mach.read16(addr, ret))
@@ -83,7 +83,7 @@ rsat (machine& mach, word pc, word addr)
 /* Read 1 byte from memory.  */
 
 static int INLINE 
-rbat (machine& mach, word pc, word addr)
+rbat (machine& mach, word addr)
 {
 	uint32_t ret;
 	if (!mach.read8(addr, ret))
@@ -94,7 +94,7 @@ rbat (machine& mach, word pc, word addr)
 /* Read 4 bytes from memory.  */
 
 static int INLINE 
-rlat (machine& mach, word pc, word addr)
+rlat (machine& mach, word addr)
 {
 	uint32_t ret;
 	if (!mach.read32(addr, ret))
@@ -337,11 +337,11 @@ sim_resume (machine& mach, unsigned long long cpu_budget)
 
  		/* Push the return address.  */
 		sp -= 4;
- 		wlat (mach, opc, sp, pc + 6);
+ 		wlat (mach, sp, pc + 6);
  		
  		/* Push the current frame pointer.  */
  		sp -= 4;
- 		wlat (mach, opc, sp, cpu.asregs.regs[0]);
+ 		wlat (mach, sp, cpu.asregs.regs[0]);
  
  		/* Uncache the stack pointer and set the pc and $fp.  */
 		cpu.asregs.regs[1] = sp;
@@ -356,11 +356,11 @@ sim_resume (machine& mach, unsigned long long cpu_budget)
 		TRACE("ret");
  
  		/* Pop the frame pointer.  */
- 		cpu.asregs.regs[0] = rlat (mach, opc, sp);
+ 		cpu.asregs.regs[0] = rlat (mach, sp);
  		sp += 4;
  		
  		/* Pop the return address.  */
- 		pc = rlat (mach, opc, sp) - 2;
+ 		pc = rlat (mach, sp) - 2;
  		sp += 4;
 
 		/* Skip over the static chain slot.  */
@@ -386,7 +386,7 @@ sim_resume (machine& mach, unsigned long long cpu_budget)
 		int b = inst & 0xf;
 		int sp = cpu.asregs.regs[a] - 4;
 		TRACE("push");
-		wlat (mach, opc, sp, cpu.asregs.regs[b]);
+		wlat (mach, sp, cpu.asregs.regs[b]);
 		cpu.asregs.regs[a] = sp;
 	      }
 	      break;
@@ -396,7 +396,7 @@ sim_resume (machine& mach, unsigned long long cpu_budget)
 		int b = inst & 0xf;
 		int sp = cpu.asregs.regs[a];
 		TRACE("pop");
-		cpu.asregs.regs[b] = rlat (mach, opc, sp);
+		cpu.asregs.regs[b] = rlat (mach, sp);
 		cpu.asregs.regs[a] = sp + 4;
 	      }
 	      break;
@@ -405,7 +405,7 @@ sim_resume (machine& mach, unsigned long long cpu_budget)
 		int reg = (inst >> 4) & 0xf;
 		unsigned int addr = EXTRACT_WORD(pc+2);
 		TRACE("lda.l");
-		cpu.asregs.regs[reg] = rlat (mach, opc, addr);
+		cpu.asregs.regs[reg] = rlat (mach, addr);
 		pc += 4;
 	      }
 	      break;
@@ -414,7 +414,7 @@ sim_resume (machine& mach, unsigned long long cpu_budget)
 		int reg = (inst >> 4) & 0xf;
 		unsigned int addr = EXTRACT_WORD(pc+2);
 		TRACE("sta.l");
-		wlat (mach, opc, addr, cpu.asregs.regs[reg]);
+		wlat (mach, addr, cpu.asregs.regs[reg]);
 		pc += 4;
 	      }
 	      break;
@@ -425,7 +425,7 @@ sim_resume (machine& mach, unsigned long long cpu_budget)
 		int xv;
 		TRACE("ld.l");
 		xv = cpu.asregs.regs[src];
-		cpu.asregs.regs[dest] = rlat (mach, opc, xv);
+		cpu.asregs.regs[dest] = rlat (mach, xv);
 	      }
 	      break;
 	    case 0x0b: /* st.l */
@@ -433,7 +433,7 @@ sim_resume (machine& mach, unsigned long long cpu_budget)
 		int dest = (inst >> 4) & 0xf;
 		int val  = inst & 0xf;
 		TRACE("st.l");
-		wlat (mach, opc, cpu.asregs.regs[dest], cpu.asregs.regs[val]);
+		wlat (mach, cpu.asregs.regs[dest], cpu.asregs.regs[val]);
 	      }
 	      break;
 	    case 0x0c: /* ldo.l */
@@ -443,7 +443,7 @@ sim_resume (machine& mach, unsigned long long cpu_budget)
 		int b = inst & 0xf;
 		TRACE("ldo.l");
 		addr += cpu.asregs.regs[b];
-		cpu.asregs.regs[a] = rlat (mach, opc, addr);
+		cpu.asregs.regs[a] = rlat (mach, addr);
 		pc += 4;
 	      }
 	      break;
@@ -454,7 +454,7 @@ sim_resume (machine& mach, unsigned long long cpu_budget)
 		int b = inst & 0xf;
 		TRACE("sto.l");
 		addr += cpu.asregs.regs[a];
-		wlat (mach, opc, addr, cpu.asregs.regs[b]);
+		wlat (mach, addr, cpu.asregs.regs[b]);
 		pc += 4;
 	      }
 	      break;
@@ -526,11 +526,11 @@ sim_resume (machine& mach, unsigned long long cpu_budget)
 
 		/* Push the return address.  */
 		sp -= 4;
-		wlat (mach, opc, sp, pc + 2);
+		wlat (mach, sp, pc + 2);
 		
 		/* Push the current frame pointer.  */
 		sp -= 4;
-		wlat (mach, opc, sp, cpu.asregs.regs[0]);
+		wlat (mach, sp, cpu.asregs.regs[0]);
 
 		/* Uncache the stack pointer and set the fp & pc.  */
 		cpu.asregs.regs[1] = sp;
@@ -562,7 +562,7 @@ sim_resume (machine& mach, unsigned long long cpu_budget)
 		int xv;
 		TRACE("ld.b");
 		xv = cpu.asregs.regs[src];
-		cpu.asregs.regs[dest] = rbat (mach, opc, xv);
+		cpu.asregs.regs[dest] = rbat (mach, xv);
 	      }
 	      break;
 	    case 0x1d: /* lda.b */
@@ -570,7 +570,7 @@ sim_resume (machine& mach, unsigned long long cpu_budget)
 		int reg = (inst >> 4) & 0xf;
 		unsigned int addr = EXTRACT_WORD(pc+2);
 		TRACE("lda.b");
-		cpu.asregs.regs[reg] = rbat (mach, opc, addr);
+		cpu.asregs.regs[reg] = rbat (mach, addr);
 		pc += 4;
 	      }
 	      break;
@@ -579,7 +579,7 @@ sim_resume (machine& mach, unsigned long long cpu_budget)
 		int dest = (inst >> 4) & 0xf;
 		int val  = inst & 0xf;
 		TRACE("st.b");
-		wbat (mach, opc, cpu.asregs.regs[dest], cpu.asregs.regs[val]);
+		wbat (mach, cpu.asregs.regs[dest], cpu.asregs.regs[val]);
 	      }
 	      break;
 	    case 0x1f: /* sta.b */
@@ -587,7 +587,7 @@ sim_resume (machine& mach, unsigned long long cpu_budget)
 		int reg = (inst >> 4) & 0xf;
 		unsigned int addr = EXTRACT_WORD(pc+2);
 		TRACE("sta.b");
-		wbat (mach, opc, addr, cpu.asregs.regs[reg]);
+		wbat (mach, addr, cpu.asregs.regs[reg]);
 		pc += 4;
 	      }
 	      break;
@@ -608,7 +608,7 @@ sim_resume (machine& mach, unsigned long long cpu_budget)
 		int xv;
 		TRACE("ld.s");
 		xv = cpu.asregs.regs[src];
-		cpu.asregs.regs[dest] = rsat (mach, opc, xv);
+		cpu.asregs.regs[dest] = rsat (mach, xv);
 	      }
 	      break;
 	    case 0x22: /* lda.s */
@@ -616,7 +616,7 @@ sim_resume (machine& mach, unsigned long long cpu_budget)
 		int reg = (inst >> 4) & 0xf;
 		unsigned int addr = EXTRACT_WORD(pc+2);
 		TRACE("lda.s");
-		cpu.asregs.regs[reg] = rsat (mach, opc, addr);
+		cpu.asregs.regs[reg] = rsat (mach, addr);
 		pc += 4;
 	      }
 	      break;
@@ -625,7 +625,7 @@ sim_resume (machine& mach, unsigned long long cpu_budget)
 		int dest = (inst >> 4) & 0xf;
 		int val  = inst & 0xf;
 		TRACE("st.s");
-		wsat (mach, opc, cpu.asregs.regs[dest], cpu.asregs.regs[val]);
+		wsat (mach, cpu.asregs.regs[dest], cpu.asregs.regs[val]);
 	      }
 	      break;
 	    case 0x24: /* sta.s */
@@ -633,7 +633,7 @@ sim_resume (machine& mach, unsigned long long cpu_budget)
 		int reg = (inst >> 4) & 0xf;
 		unsigned int addr = EXTRACT_WORD(pc+2);
 		TRACE("sta.s");
-		wsat (mach, opc, addr, cpu.asregs.regs[reg]);
+		wsat (mach, addr, cpu.asregs.regs[reg]);
 		pc += 4;
 	      }
 	      break;
@@ -825,7 +825,7 @@ sim_resume (machine& mach, unsigned long long cpu_budget)
 		int b = inst & 0xf;
 		TRACE("ldo.b");
 		addr += cpu.asregs.regs[b];
-		cpu.asregs.regs[a] = rbat (mach, opc, addr);
+		cpu.asregs.regs[a] = rbat (mach, addr);
 		pc += 4;
 	      }
 	      break;
@@ -836,7 +836,7 @@ sim_resume (machine& mach, unsigned long long cpu_budget)
 		int b = inst & 0xf;
 		TRACE("sto.b");
 		addr += cpu.asregs.regs[a];
-		wbat (mach, opc, addr, cpu.asregs.regs[b]);
+		wbat (mach, addr, cpu.asregs.regs[b]);
 		pc += 4;
 	      }
 	      break;
@@ -847,7 +847,7 @@ sim_resume (machine& mach, unsigned long long cpu_budget)
 		int b = inst & 0xf;
 		TRACE("ldo.s");
 		addr += cpu.asregs.regs[b];
-		cpu.asregs.regs[a] = rsat (mach, opc, addr);
+		cpu.asregs.regs[a] = rsat (mach, addr);
 		pc += 4;
 	      }
 	      break;
@@ -858,7 +858,7 @@ sim_resume (machine& mach, unsigned long long cpu_budget)
 		int b = inst & 0xf;
 		TRACE("sto.s");
 		addr += cpu.asregs.regs[a];
-		wsat (mach, opc, addr, cpu.asregs.regs[b]);
+		wsat (mach, addr, cpu.asregs.regs[b]);
 		pc += 4;
 	      }
 	      break;
