@@ -106,7 +106,9 @@ void machine::fillDescriptors(std::vector<struct mach_memmap_ent>& desc)
 		mme.vaddr = ar->start;
 		mme.length = ar->length;
 		memset(&mme.tags, 0, sizeof(mme.tags));
-		strncpy(mme.tags, ar->readOnly ? "ro" : "rw", sizeof(mme.tags));
+		strcpy(mme.tags, ar->readOnly ? "ro," : "rw,");
+		strcat(mme.tags, ar->name.c_str());
+		strcat(mme.tags, ",");
 
 		desc.push_back(mme);
 	}

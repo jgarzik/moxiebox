@@ -35,7 +35,7 @@ bool loadRawData(machine& mach, const char *filename)
 		return false;
 	}
 
-	addressRange *rdr = new addressRange(st.st_size);
+	addressRange *rdr = new addressRange("data", st.st_size);
 
 	rdr->buf.assign((char *) p, (size_t) st.st_size);
 	rdr->updateRoot();
@@ -63,14 +63,15 @@ static void printMemMap(machine &mach)
 {
 	for (unsigned int i = 0; i < mach.memmap.size(); i++) {
 		addressRange *ar = mach.memmap[i];
-		fprintf(stdout, "%s %08x-%08x\n",
-			ar->readOnly ? "ro" : "rw", ar->start, ar->end);
+		fprintf(stdout, "%s %08x-%08x %s\n",
+			ar->readOnly ? "ro" : "rw", ar->start, ar->end,
+			ar->name.c_str());
 	}
 }
 
 static void addStackMem(machine& mach)
 {
-	addressRange *rdr = new addressRange(STACK_SIZE);
+	addressRange *rdr = new addressRange("stack", STACK_SIZE);
 
 	rdr->buf.resize(STACK_SIZE);
 	rdr->updateRoot();
@@ -86,18 +87,38 @@ static void addStackMem(machine& mach)
 
 static void addMapDescriptor(machine& mach)
 {
+	// fill list from existing memory map
 	vector<struct mach_memmap_ent> desc;
 	mach.fillDescriptors(desc);
 
+	// add entry for the mapdesc range to be added to memory map
+	struct mach_memmap_ent mme_self;
+	memset(&mme_self, 0, sizeof(mme_self));
+	desc.push_back(mme_self);
+
+	// add blank entry for list terminator
 	struct mach_memmap_ent mme_end;
 	memset(&mme_end, 0, sizeof(mme_end));
 	desc.push_back(mme_end);
 
+	// calc total region size
 	size_t sz = sizeof(mme_end) * desc.size();
-	addressRange *ar = new addressRange(sz);
+
+	// manually fill in mapdesc range descriptor
+	mme_self.vaddr = 0x400000 + MACH_PAGE_SIZE;
+	mme_self.length = sz;
+	strcpy(mme_self.tags, "ro,mapdesc,");
+
+	// build entry for global memory map
+	addressRange *ar = new addressRange("mapdesc", sz);
+	ar->start = 0x400000 + MACH_PAGE_SIZE;
+	ar->end = ar->start + ar->length;
+
+	// allocate space for descriptor array
 	ar->buf.resize(sz);
 	ar->updateRoot();
 
+	// copy 'desc' array into allocated memory space
 	unsigned int i = 0;
 	for (vector<struct mach_memmap_ent>::iterator it = desc.begin();
 	     it != desc.end(); it++, i++) {
@@ -105,9 +126,8 @@ static void addMapDescriptor(machine& mach)
 		memcpy(&ar->buf[i * sizeof(mme)], &mme, sizeof(mme));
 	}
 
-	ar->start = 0x400000 + MACH_PAGE_SIZE;
-	ar->end = ar->start + ar->length;
 
+	// add memory range to global memory map
 	mach.memmap.push_back(ar);
 	mach.sortMemMap();
 }

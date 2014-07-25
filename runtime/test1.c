@@ -21,6 +21,18 @@ static void do_accesses(void)
 	c[100] = 99;
 }
 
+static int do_memmap_accesses(void)
+{
+	int count = 0;
+	struct moxie_memory_map_ent *ent = moxie_memmap;
+	while (ent->addr) {
+		count++;
+		ent++;
+	}
+
+	return count;
+}
+
 static void fini(void)
 {
 	_exit(0);
@@ -30,6 +42,7 @@ int main (int argc, char *argv[])
 {
 	do_setup();
 	do_accesses();
+	do_memmap_accesses();
 	fini();
 	return 0;
 

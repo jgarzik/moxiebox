@@ -9,6 +9,7 @@
 
 enum {
 	MACH_PAGE_SIZE = 4096,
+	MACH_PAGE_MASK = (MACH_PAGE_SIZE-1),
 };
 
 struct mach_memmap_ent {
@@ -28,6 +29,7 @@ public:
 
 class addressRange {
 public:
+	std::string name;
 	uint32_t start;
 	uint32_t end;
 	uint32_t length;
@@ -35,7 +37,8 @@ public:
 	bool readOnly;
 	std::string buf;
 
-	addressRange(size_t sz) {
+	addressRange(std::string name_, size_t sz) {
+		name = name_;
 		start = 0;
 		end = 0;
 		length = sz;

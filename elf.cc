@@ -18,7 +18,7 @@ bool loadElfProgSection(machine& mach, Elf *e, GElf_Phdr *phdr, void *p)
 	bool writable = (phdr->p_flags & PF_W);
 	size_t sz = phdr->p_memsz;
 
-	addressRange *rdr = new addressRange(sz);
+	addressRange *rdr = new addressRange("elf", sz);
 
 	rdr->start = phdr->p_vaddr;
 	rdr->length = sz;

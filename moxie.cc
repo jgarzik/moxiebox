@@ -132,7 +132,7 @@ static void sim_mmap(machine& mach)
       	return;
       }
 
-      addressRange *rdr = new addressRange(length);
+      addressRange *rdr = new addressRange("heap", length);
       rdr->buf.resize(length);
       rdr->updateRoot();
       rdr->readOnly = false;
