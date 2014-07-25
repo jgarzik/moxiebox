@@ -42,22 +42,6 @@ static inline uint32_t extract_word32(machine& mach, uint32_t addr)
 	return le32toh(ret);
 }
 
-static uint32_t sim_core_read_aligned_2(machine& mach, uint32_t addr)
-{
-	uint32_t ret;
-	if (!mach.read16(addr, ret))
-		mach.cpu.asregs.exception = SIGBUS;
-	return ret;
-}
-
-static uint32_t sim_core_read_aligned_4(machine& mach, uint32_t addr)
-{
-	uint32_t ret;
-	if (!mach.read32(addr, ret))
-		mach.cpu.asregs.exception = SIGBUS;
-	return ret;
-}
-
 /* Write a 1 byte value to memory.  */
 
 static void INLINE 
@@ -88,9 +72,12 @@ wlat (machine& mach, word pc, word x, word v)
 /* Read 2 bytes from memory.  */
 
 static int INLINE 
-rsat (machine& mach, word pc, word x)
+rsat (machine& mach, word pc, word addr)
 {
-  return (sim_core_read_aligned_2 (mach, x));
+	uint32_t ret;
+	if (!mach.read16(addr, ret))
+		mach.cpu.asregs.exception = SIGBUS;
+	return (int32_t) ret;
 }
 
 /* Read 1 byte from memory.  */
@@ -107,9 +94,12 @@ rbat (machine& mach, word pc, word addr)
 /* Read 4 bytes from memory.  */
 
 static int INLINE 
-rlat (machine& mach, word pc, word x)
+rlat (machine& mach, word pc, word addr)
 {
-  return (sim_core_read_aligned_4 (mach, x));
+	uint32_t ret;
+	if (!mach.read32(addr, ret))
+		mach.cpu.asregs.exception = SIGBUS;
+	return (int32_t) ret;
 }
 
 #define TRACE(str) if (mach.tracing) fprintf(tracefile,"0x%08x, %s, 0x%x, 0x%x, 0x%x, 0x%x, 0x%x, 0x%x, 0x%x, 0x%x, 0x%x, 0x%x, 0x%x, 0x%x, 0x%x, 0x%x, 0x%x, 0x%x\n", opc, str, cpu.asregs.regs[0], cpu.asregs.regs[1], cpu.asregs.regs[2], cpu.asregs.regs[3], cpu.asregs.regs[4], cpu.asregs.regs[5], cpu.asregs.regs[6], cpu.asregs.regs[7], cpu.asregs.regs[8], cpu.asregs.regs[9], cpu.asregs.regs[10], cpu.asregs.regs[11], cpu.asregs.regs[12], cpu.asregs.regs[13], cpu.asregs.regs[14], cpu.asregs.regs[15]);
