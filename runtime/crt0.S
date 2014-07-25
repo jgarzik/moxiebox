@@ -23,9 +23,13 @@ _start:
 	                           for stack frame. */
 	xor	$fp, $fp	/* zero fp to allow unwinders to stop */
 
+	/* load sim memory descriptor base address */
+	gsr	$r0, 6
+	sta.l	moxie_memmap, $r0
+
 	/* Set argc and argv. */
-	xor $r0, $r0
-	xor $r1, $r1
+	xor	$r0, $r0
+	xor	$r1, $r1
 
 	jsra	main
 	jmpa	_exit

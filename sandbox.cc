@@ -110,14 +110,11 @@ static void addMapDescriptor(machine& mach)
 	size_t sz = sizeof(mme_end) * desc.size();
 
 	// manually fill in mapdesc range descriptor
-	mme_self.vaddr = MACH_MEMMAP_ADDR;
 	mme_self.length = sz;
 	strcpy(mme_self.tags, "ro,mapdesc,");
 
 	// build entry for global memory map
 	addressRange *ar = new addressRange("mapdesc", sz);
-	ar->start = MACH_MEMMAP_ADDR;
-	ar->end = ar->start + ar->length;
 
 	// allocate space for descriptor array
 	ar->buf.resize(sz);
@@ -133,8 +130,10 @@ static void addMapDescriptor(machine& mach)
 
 
 	// add memory range to global memory map
-	mach.memmap.push_back(ar);
-	mach.sortMemMap();
+	mach.mapInsert(ar);
+
+	// set SR #6 to now-initialized mapdesc start vaddr
+	mach.cpu.asregs.sregs[6] = ar->start;
 }
 
 int main (int argc, char *argv[])
