@@ -33,6 +33,7 @@ bool loadElfProgSection(machine& mach, Elf *e, GElf_Phdr *phdr, void *p)
 	char *cp = (char *) p;
 	rdr->buf.assign(cp + phdr->p_offset, phdr->p_filesz);
 	rdr->buf.resize(phdr->p_memsz);
+	rdr->updateRoot();
 
 	mach.memmap.push_back(rdr);
 	mach.sortMemMap();

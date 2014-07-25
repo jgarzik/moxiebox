@@ -26,30 +26,22 @@ public:
 	uint32_t start;
 	uint32_t end;
 	uint32_t length;
+	void *root;
+	bool readOnly;
 
 	addressRange() {
 		name = "ar";
 		start = 0;
 		end = 0;
 		length = 0;
+		root = NULL;
+		readOnly = true;
 	}
 
-	virtual bool read8(uint32_t addr, uint32_t& val_out) {
-		val_out = 0xffffffffU;
-		return false;
+	void *physaddr(uint32_t addr) {
+		uint32_t offset = addr - start;
+		return (char *)root + offset;
 	}
-	virtual bool read16(uint32_t addr, uint32_t& val_out) {
-		val_out = 0xffffffffU;
-		return false;
-	}
-	virtual bool read32(uint32_t addr, uint32_t& val_out) {
-		val_out = 0xffffffffU;
-		return false;
-	}
-
-	virtual bool write8(uint32_t addr, uint32_t val) { return false; }
-	virtual bool write16(uint32_t addr, uint32_t val) { return false; }
-	virtual bool write32(uint32_t addr, uint32_t val) { return false; }
 
 	bool inRange(uint32_t addr, uint32_t len) {
 		return ((addr >= start) &&
@@ -66,24 +58,11 @@ public:
 		start = 0;
 		end = 0;
 		length = sz;
+		root = NULL;
+		readOnly = true;
 	}
 
-	bool read8(uint32_t addr, uint32_t& val_out) {
-		uint8_t val8;
-		memcpy(&val8, &buf[addr], sizeof(val8));
-		val_out = val8;
-		return true;
-	}
-	bool read16(uint32_t addr, uint32_t& val_out) {
-		uint16_t val16;
-		memcpy(&val16, &buf[addr], sizeof(val16));
-		val_out = val16;
-		return true;
-	}
-	bool read32(uint32_t addr, uint32_t& val_out) {
-		memcpy(&val_out, &buf[addr], sizeof(val_out));
-		return true;
-	}
+	void updateRoot() { root = &buf[0]; }
 };
 
 class rwDataRange : public roDataRange {
@@ -93,21 +72,8 @@ public:
 		start = 0;
 		end = 0;
 		length = sz;
-	}
-
-	bool write8(uint32_t addr, uint32_t val_in) {
-		uint8_t val = val_in;
-		memcpy(&buf[addr], &val, sizeof(val));
-		return true;
-	}
-	bool write16(uint32_t addr, uint32_t val_in) {
-		uint16_t val = val_in;
-		memcpy(&buf[addr], &val, sizeof(val));
-		return true;
-	}
-	bool write32(uint32_t addr, uint32_t val_in) {
-		memcpy(&buf[addr], &val_in, sizeof(val_in));
-		return true;
+		root = NULL;
+		readOnly = false;
 	}
 };
 
@@ -134,6 +100,7 @@ public:
 	bool write16(uint32_t addr, uint32_t val);
 	bool write32(uint32_t addr, uint32_t val);
 
+	void *physaddr(uint32_t addr, size_t objLen, bool wantWrite = false);
 	void sortMemMap();
 	bool mapInsert(addressRange *ar);
 };

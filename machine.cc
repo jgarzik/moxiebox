@@ -2,70 +2,78 @@
 #include <algorithm>
 #include "sandbox.h"
 
-bool machine::read8(uint32_t addr, uint32_t& val_out)
+void *machine::physaddr(uint32_t addr, size_t objLen, bool wantWrite)
 {
 	for (unsigned int i = 0; i < memmap.size(); i++) {
 		addressRange* mr = memmap[i];
-		if (mr->inRange(addr, 1))
-			return mr->read8(addr - mr->start, val_out);
+		if (mr->inRange(addr, objLen)) {
+			if (wantWrite && mr->readOnly)
+				return NULL;
+			return mr->physaddr(addr);
+		}
 	}
 
-	return false;
+	return NULL;
+}
+
+bool machine::read8(uint32_t addr, uint32_t& val_out)
+{
+	uint8_t *paddr = (uint8_t *) physaddr(addr, 1);
+	if (!paddr)
+		return false;
+
+	val_out = *paddr;
+	return true;
 }
 
 bool machine::read16(uint32_t addr, uint32_t& val_out)
 {
-	for (unsigned int i = 0; i < memmap.size(); i++) {
-		addressRange* mr = memmap[i];
-		if (mr->inRange(addr, 1))
-			return mr->read16(addr - mr->start, val_out);
-	}
+	uint16_t *paddr = (uint16_t *) physaddr(addr, 2);
+	if (!paddr)
+		return false;
 
-	return false;
+	val_out = *paddr;
+	return true;
 }
 
 bool machine::read32(uint32_t addr, uint32_t& val_out)
 {
-	for (unsigned int i = 0; i < memmap.size(); i++) {
-		addressRange* mr = memmap[i];
-		if (mr->inRange(addr, 1))
-			return mr->read32(addr - mr->start, val_out);
-	}
+	uint32_t *paddr = (uint32_t *) physaddr(addr, 4);
+	if (!paddr)
+		return false;
 
-	return false;
+	val_out = *paddr;
+	return true;
 }
 
 bool machine::write8(uint32_t addr, uint32_t val)
 {
-	for (unsigned int i = 0; i < memmap.size(); i++) {
-		addressRange* mr = memmap[i];
-		if (mr->inRange(addr, 1))
-			return mr->write8(addr - mr->start, val);
-	}
+	uint8_t *paddr = (uint8_t *) physaddr(addr, 1, true);
+	if (!paddr)
+		return false;
 
-	return false;
+	*paddr = (uint8_t) val;
+	return true;
 }
 
 bool machine::write16(uint32_t addr, uint32_t val)
 {
-	for (unsigned int i = 0; i < memmap.size(); i++) {
-		addressRange* mr = memmap[i];
-		if (mr->inRange(addr, 1))
-			return mr->write16(addr - mr->start, val);
-	}
+	uint16_t *paddr = (uint16_t *) physaddr(addr, 2, true);
+	if (!paddr)
+		return false;
 
-	return false;
+	*paddr = (uint16_t) val;
+	return true;
 }
 
 bool machine::write32(uint32_t addr, uint32_t val)
 {
-	for (unsigned int i = 0; i < memmap.size(); i++) {
-		addressRange* mr = memmap[i];
-		if (mr->inRange(addr, 1))
-			return mr->write32(addr - mr->start, val);
-	}
+	uint32_t *paddr = (uint32_t *) physaddr(addr, 4, true);
+	if (!paddr)
+		return false;
 
-	return false;
+	*paddr = val;
+	return true;
 }
 
 static bool memmapCmp(addressRange *a, addressRange *b)

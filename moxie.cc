@@ -44,7 +44,7 @@ static inline uint32_t extract_word32(machine& mach, uint32_t addr)
 
 /* Write a 1 byte value to memory.  */
 
-static void INLINE 
+static void INLINE
 wbat (machine& mach, word addr, word v)
 {
   if (!mach.write8(addr, v))
@@ -53,7 +53,7 @@ wbat (machine& mach, word addr, word v)
 
 /* Write a 2 byte value to memory.  */
 
-static void INLINE 
+static void INLINE
 wsat (machine& mach, word addr, word v)
 {
   if (!mach.write16(addr, v))
@@ -62,7 +62,7 @@ wsat (machine& mach, word addr, word v)
 
 /* Write a 4 byte value to memory.  */
 
-static void INLINE 
+static void INLINE
 wlat (machine& mach, word addr, word v)
 {
   if (!mach.write32(addr, v))
@@ -71,7 +71,7 @@ wlat (machine& mach, word addr, word v)
 
 /* Read 2 bytes from memory.  */
 
-static int INLINE 
+static int INLINE
 rsat (machine& mach, word addr)
 {
 	uint32_t ret;
@@ -82,7 +82,7 @@ rsat (machine& mach, word addr)
 
 /* Read 1 byte from memory.  */
 
-static int INLINE 
+static int INLINE
 rbat (machine& mach, word addr)
 {
 	uint32_t ret;
@@ -93,7 +93,7 @@ rbat (machine& mach, word addr)
 
 /* Read 4 bytes from memory.  */
 
-static int INLINE 
+static int INLINE
 rlat (machine& mach, word addr)
 {
 	uint32_t ret;
@@ -134,6 +134,7 @@ static void sim_mmap(machine& mach)
 
       rwDataRange *rdr = new rwDataRange(length);
       rdr->buf.resize(length);
+      rdr->updateRoot();
 
       if (!mach.mapInsert(rdr))
       	cpu.asregs.regs[2] = -ENOMEM;
@@ -158,7 +159,7 @@ sim_resume (machine& mach, unsigned long long cpu_budget)
   insts = cpu.asregs.insts;
 
   /* Run instructions here. */
-  do 
+  do
     {
       opc = pc;
 
@@ -338,11 +339,11 @@ sim_resume (machine& mach, unsigned long long cpu_budget)
  		/* Push the return address.  */
 		sp -= 4;
  		wlat (mach, sp, pc + 6);
- 		
+
  		/* Push the current frame pointer.  */
  		sp -= 4;
  		wlat (mach, sp, cpu.asregs.regs[0]);
- 
+
  		/* Uncache the stack pointer and set the pc and $fp.  */
 		cpu.asregs.regs[1] = sp;
 		cpu.asregs.regs[0] = sp;
@@ -354,18 +355,18 @@ sim_resume (machine& mach, unsigned long long cpu_budget)
  		unsigned int sp = cpu.asregs.regs[0];
 
 		TRACE("ret");
- 
+
  		/* Pop the frame pointer.  */
  		cpu.asregs.regs[0] = rlat (mach, sp);
  		sp += 4;
- 		
+
  		/* Pop the return address.  */
  		pc = rlat (mach, sp) - 2;
  		sp += 4;
 
 		/* Skip over the static chain slot.  */
 		sp += 4;
- 
+
  		/* Uncache the stack pointer.  */
  		cpu.asregs.regs[1] = sp;
   	      }
@@ -464,7 +465,7 @@ sim_resume (machine& mach, unsigned long long cpu_budget)
 		int b  = inst & 0xf;
 		int cc = 0;
 		int va = cpu.asregs.regs[a];
-		int vb = cpu.asregs.regs[b]; 
+		int vb = cpu.asregs.regs[b];
 
 		TRACE("cmp");
 
@@ -527,7 +528,7 @@ sim_resume (machine& mach, unsigned long long cpu_budget)
 		/* Push the return address.  */
 		sp -= 4;
 		wlat (mach, sp, pc + 2);
-		
+
 		/* Push the current frame pointer.  */
 		sp -= 4;
 		wlat (mach, sp, cpu.asregs.regs[0]);
