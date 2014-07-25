@@ -22,18 +22,17 @@ public:
 
 class addressRange {
 public:
-	std::string name;
 	uint32_t start;
 	uint32_t end;
 	uint32_t length;
 	void *root;
 	bool readOnly;
+	std::string buf;
 
-	addressRange() {
-		name = "ar";
+	addressRange(size_t sz) {
 		start = 0;
 		end = 0;
-		length = 0;
+		length = sz;
 		root = NULL;
 		readOnly = true;
 	}
@@ -47,34 +46,8 @@ public:
 		return ((addr >= start) &&
 			((addr + len) <= end));		// warn: overflow
 	}
-};
-
-class roDataRange : public addressRange {
-public:
-	std::string buf;
-
-	roDataRange(size_t sz) {
-		name = "ro";
-		start = 0;
-		end = 0;
-		length = sz;
-		root = NULL;
-		readOnly = true;
-	}
 
 	void updateRoot() { root = &buf[0]; }
-};
-
-class rwDataRange : public roDataRange {
-public:
-	rwDataRange(size_t sz) : roDataRange(sz) {
-		name = "rw";
-		start = 0;
-		end = 0;
-		length = sz;
-		root = NULL;
-		readOnly = false;
-	}
 };
 
 class machine {

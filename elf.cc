@@ -18,17 +18,12 @@ bool loadElfProgSection(machine& mach, Elf *e, GElf_Phdr *phdr, void *p)
 	bool writable = (phdr->p_flags & PF_W);
 	size_t sz = phdr->p_memsz;
 
-	rwDataRange *rwdr = NULL;
-	roDataRange *rdr;
-	if (writable) {
-		rwdr = new rwDataRange(sz);
-		rdr = rwdr;
-	} else
-		rdr = new roDataRange(sz);
+	addressRange *rdr = new addressRange(sz);
 
 	rdr->start = phdr->p_vaddr;
 	rdr->length = sz;
 	rdr->end = rdr->start + rdr->length;
+	rdr->readOnly = (writable ? false : true);
 
 	char *cp = (char *) p;
 	rdr->buf.assign(cp + phdr->p_offset, phdr->p_filesz);

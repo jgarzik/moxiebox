@@ -35,7 +35,7 @@ bool loadRawData(machine& mach, const char *filename)
 		return false;
 	}
 
-	rwDataRange *rdr = new rwDataRange(st.st_size);
+	addressRange *rdr = new addressRange(st.st_size);
 
 	rdr->buf.assign((char *) p, (size_t) st.st_size);
 	rdr->updateRoot();
@@ -64,16 +64,17 @@ static void printMemMap(machine &mach)
 	for (unsigned int i = 0; i < mach.memmap.size(); i++) {
 		addressRange *ar = mach.memmap[i];
 		fprintf(stdout, "%s %08x-%08x\n",
-			ar->name.c_str(), ar->start, ar->end);
+			ar->readOnly ? "ro" : "rw", ar->start, ar->end);
 	}
 }
 
 static void addStackMem(machine& mach)
 {
-	rwDataRange *rdr = new rwDataRange(STACK_SIZE);
+	addressRange *rdr = new addressRange(STACK_SIZE);
 
 	rdr->buf.resize(STACK_SIZE);
 	rdr->updateRoot();
+	rdr->readOnly = false;
 
 	rdr->end = 0x400000;
 	rdr->length = STACK_SIZE;

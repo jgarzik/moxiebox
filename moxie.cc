@@ -132,13 +132,15 @@ static void sim_mmap(machine& mach)
       	return;
       }
 
-      rwDataRange *rdr = new rwDataRange(length);
+      addressRange *rdr = new addressRange(length);
       rdr->buf.resize(length);
       rdr->updateRoot();
+      rdr->readOnly = false;
 
-      if (!mach.mapInsert(rdr))
+      if (!mach.mapInsert(rdr)) {
+	delete rdr;
       	cpu.asregs.regs[2] = -ENOMEM;
-      else {
+      } else {
       	cpu.asregs.regs[2] = rdr->start;
 	mach.heapAvail -= length;
       }
