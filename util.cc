@@ -5,10 +5,33 @@
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <unistd.h>
+#include <dirent.h>
 #include <fcntl.h>
+#include <errno.h>
 #include "sandbox.h"
 
 using namespace std;
+
+class mdir {
+public:
+	DIR *d;
+	std::string pathname;
+
+	mdir(const std::string& pathname_ = "") {
+		d = NULL;
+		pathname = pathname_;
+	}
+	~mdir() {
+		if (d)
+			closedir(d);
+	}
+
+	bool open() {
+		d = opendir(pathname.c_str());
+		return (d != NULL);
+	}
+	struct dirent *read() { return readdir(d); }
+};
 
 const signed char p_util_hexdigit[256] =
 { -1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,
@@ -98,6 +121,32 @@ bool mfile::open(int flags, mode_t mode, bool map)
 	if (data == (void *)-1)
 		return false;
 	
+	return true;
+}
+
+bool ReadDir(const std::string& pathname, std::vector<std::string>& dirNames)
+{
+	mdir d(pathname);
+	if (!d.open())
+		return false;
+
+	dirNames.clear();
+
+	errno = 0;
+	struct dirent *de;
+	while ((de = d.read()) != NULL) {
+		if (!strcmp(de->d_name, ".") ||
+		    !strcmp(de->d_name, ".."))
+			continue;
+
+		dirNames.push_back(de->d_name);
+	}
+
+	if (errno) {
+		dirNames.clear();
+		return false;
+	}
+
 	return true;
 }
 

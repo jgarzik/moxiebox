@@ -7,10 +7,8 @@
 #include <unistd.h>
 #include <libelf.h>
 #include <gelf.h>
-#include <dirent.h>
 #include <sys/mman.h>
 #include <stdio.h>
-#include <errno.h>
 #include "sandbox.h"
 
 #ifndef EM_MOXIE
@@ -116,20 +114,15 @@ bool loadElfHash(machine& mach, const char *hash,
 	for (unsigned int i = 0; i < pathExec.size(); i++) {
 		const std::string& path = pathExec[i];
 
-		mdir d(path);
-		if (!d.open()) {
+		vector<string> dirNames;
+		if (!ReadDir(path, dirNames)) {
 			perror(path.c_str());
 			continue;
 		}
 
-		errno = 0;
-		struct dirent *de;
-		while ((de = d.read()) != NULL) {
-			if (!strcmp(de->d_name, ".") ||
-			    !strcmp(de->d_name, ".."))
-				continue;
-
-			string filename = path + "/" + de->d_name;
+		for (vector<string>::iterator it = dirNames.begin();
+		     it != dirNames.end(); it++) {
+			string filename = path + "/" + (*it);
 
 			mfile pf(filename);
 			if (!pf.open(O_RDONLY)) {
@@ -145,9 +138,6 @@ bool loadElfHash(machine& mach, const char *hash,
 			if (eqVec(digest, tmpHash))
 				return loadElfFile(mach, pf);
 		}
-
-		if (errno)
-			perror(path.c_str());
 	}
 
 	return false;

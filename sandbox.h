@@ -8,7 +8,6 @@
 #include <vector>
 #include <string>
 #include <string.h>
-#include <dirent.h>
 #include <stdint.h>
 #include <openssl/sha.h>
 #include "moxie.h"
@@ -66,27 +65,6 @@ public:
 	}
 
 	bool open(int flags, mode_t mode = 0, bool map = true);
-};
-
-class mdir {
-public:
-	DIR *d;
-	std::string pathname;
-
-	mdir(const std::string& pathname_ = "") {
-		d = NULL;
-		pathname = pathname_;
-	}
-	~mdir() {
-		if (d)
-			closedir(d);
-	}
-
-	bool open() {
-		d = opendir(pathname.c_str());
-		return (d != NULL);
-	}
-	struct dirent *read() { return readdir(d); }
 };
 
 struct mach_memmap_ent {
@@ -174,5 +152,8 @@ extern signed char HexDigit(char c);
 extern bool IsHex(const std::string& str);
 extern std::vector<unsigned char> ParseHex(const char* psz);
 extern std::vector<unsigned char> ParseHex(const std::string& str);
+extern bool ReadDir(const std::string& pathname,
+		    std::vector<std::string>& dirNames);
+
 
 #endif // __SANDBOX_H__
