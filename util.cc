@@ -139,6 +139,17 @@ bool ReadDir(const std::string& pathname, std::vector<std::string>& dirNames)
 		    !strcmp(de->d_name, ".."))
 			continue;
 
+		// filter out non-regular files
+		if (de->d_type == DT_UNKNOWN) {
+			string filename = pathname + "/" + de->d_name;
+			struct stat st;
+			if (stat(filename.c_str(), &st) < 0)
+				continue;
+			if (!(S_ISREG(st.st_mode)))
+				continue;
+		} else if (de->d_type != DT_REG)
+			continue;
+
 		dirNames.push_back(de->d_name);
 	}
 
