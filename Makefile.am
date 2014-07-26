@@ -7,6 +7,7 @@ sandbox_SOURCES = \
 	moxie.h \
 	moxie.cc \
 	sandbox.cc \
-	sandbox.h
-sandbox_LDADD = $(ELF_LIBS)
+	sandbox.h \
+	util.cc
+sandbox_LDADD = $(ELF_LIBS) $(CRYPTO_LIBS)
 

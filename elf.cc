@@ -1,17 +1,23 @@
 
+#include <string>
+#include <vector>
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <fcntl.h>
 #include <unistd.h>
 #include <libelf.h>
 #include <gelf.h>
+#include <dirent.h>
 #include <sys/mman.h>
 #include <stdio.h>
+#include <errno.h>
 #include "sandbox.h"
 
 #ifndef EM_MOXIE
 #define EM_MOXIE                0xFEED  /* Moxie */
 #endif // EM_MOXIE
+
+using namespace std;
 
 bool loadElfProgSection(machine& mach, Elf *e, GElf_Phdr *phdr, void *p)
 {
@@ -39,27 +45,14 @@ bool loadElfProgSection(machine& mach, Elf *e, GElf_Phdr *phdr, void *p)
 	return true;
 }
 
-bool loadElfProgram(machine& mach, const char *filename)
+static bool loadElfFile(machine& mach, mfile& pf)
 {
 	if ( elf_version ( EV_CURRENT ) == EV_NONE )
 		return false;
 
-	int fd;
-	if (( fd = open ( filename, O_RDONLY , 0)) < 0)
-		return false;
-
-	struct stat st;
-	if (fstat(fd, &st) < 0)
-		goto err_out;
-
-	void *p;
-	p = mmap(NULL, st.st_size, PROT_READ, MAP_PRIVATE, fd, 0);
-	if (p == (void *)-1)
-		goto err_out;
-
 	Elf *e;
-	if (( e = elf_memory((char *)p, st.st_size)) == NULL )
-		goto err_out_map;
+	if (( e = elf_memory((char *)pf.data, pf.st.st_size)) == NULL )
+		return false;
 
 	if ( elf_kind ( e ) != ELF_K_ELF )
 		goto err_out_elf;
@@ -94,21 +87,70 @@ bool loadElfProgram(machine& mach, const char *filename)
 			continue;
 		}
 
-		if (!loadElfProgSection(mach, e, &phdr, p))
+		if (!loadElfProgSection(mach, e, &phdr, pf.data))
 			goto err_out_elf;
 	}
 
 	elf_end(e);
-	munmap(p, st.st_size);
-	close(fd);
 	return true;
 
 err_out_elf:
 	elf_end(e);
-err_out_map:
-	munmap(p, st.st_size);
-err_out:
-	close(fd);
+	return false;
+}
+
+bool loadElfProgram(machine& mach, const string& filename)
+{
+	mfile pf(filename);
+	if (!pf.open(O_RDONLY))
+		return false;
+
+	return loadElfFile(mach, pf);
+}
+
+bool loadElfHash(machine& mach, const char *hash,
+		 const std::vector<std::string>& pathExec)
+{
+	vector<unsigned char> digest = ParseHex(hash);
+
+	for (unsigned int i = 0; i < pathExec.size(); i++) {
+		const std::string& path = pathExec[i];
+
+		mdir d(path);
+		if (!d.open()) {
+			perror(path.c_str());
+			continue;
+		}
+
+		errno = 0;
+		struct dirent *de;
+		while ((de = d.read()) != NULL) {
+			if (!strcmp(de->d_name, ".") ||
+			    !strcmp(de->d_name, ".."))
+				continue;
+
+			string filename = path + "/" + de->d_name;
+
+			mfile pf(filename);
+			if (!pf.open(O_RDONLY)) {
+				perror(filename.c_str());
+				continue;
+			}
+
+			sha256hash hash;
+			hash.update(pf.data, pf.st.st_size);
+
+			vector<unsigned char> tmpHash;
+			hash.final(tmpHash);
+
+			if (eqVec(digest, tmpHash))
+				return loadElfFile(mach, pf);
+		}
+
+		if (errno)
+			perror(path.c_str());
+	}
+
 	return false;
 }
 

@@ -57,7 +57,9 @@ static void usage(const char *progname)
 		"Usage: %s [options]\n"
 		"\n"
 		"options:\n"
-		"-e <moxie executable>\tLoad executable into address space\n"
+		"-E <directory>\t\tAdd to executable hash search path list\n"
+		"-e <hash|pathname>\tLoad specified Moxie executable into address space\n"
+		"-D <directory>\t\tAdd to data hash search path list\n"
 		"-d <file>\t\tLoad data into address space\n"
 		"-o <file>\t\tOutput data to <file>.  \"-\" for stdout\n"
 		"-t\t\t\tEnabling simulator tracing\n"
@@ -181,22 +183,54 @@ static void gatherOutput(machine& mach, const string& outFilename)
 	close(fd);
 }
 
+static bool isDir(const char *pathname)
+{
+	struct stat st;
+
+	if (stat(pathname, &st) < 0)
+		return false;
+
+	return S_ISDIR(st.st_mode);
+}
+
 int main (int argc, char *argv[])
 {
 	machine mach;
 
+	vector<string> pathExec;
+	vector<string> pathData;
+
 	bool progLoaded = false;
 	string outFilename;
 	int opt;
-	while ((opt = getopt(argc, argv, "e:d:o:t")) != -1) {
+	while ((opt = getopt(argc, argv, "E:e:D:d:o:t")) != -1) {
 		switch(opt) {
+		case 'E':
+			if (!isDir(optarg)) {
+				fprintf(stderr, "%s not a directory\n", optarg);
+				exit(EXIT_FAILURE);
+			}
+			pathExec.push_back(optarg);
+			break;
 		case 'e':
-			if (!loadElfProgram(mach, optarg)) {
+			bool rc;
+			if (IsHex(optarg))
+				rc = loadElfHash(mach, optarg, pathExec);
+			else
+				rc = loadElfProgram(mach, optarg);
+			if (!rc) {
 				fprintf(stderr, "ELF load failed for %s\n",
 					optarg);
 				exit(EXIT_FAILURE);
 			}
 			progLoaded = true;
+			break;
+		case 'D':
+			if (!isDir(optarg)) {
+				fprintf(stderr, "%s not a directory\n", optarg);
+				exit(EXIT_FAILURE);
+			}
+			pathExec.push_back(optarg);
 			break;
 		case 'd':
 			if (!loadRawData(mach, optarg)) {

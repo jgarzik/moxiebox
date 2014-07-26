@@ -1,15 +1,90 @@
 #ifndef __SANDBOX_H__
 #define __SANDBOX_H__
 
+#include <sys/types.h>
+#include <sys/mman.h>
+#include <sys/stat.h>
+#include <unistd.h>
 #include <vector>
 #include <string>
 #include <string.h>
+#include <dirent.h>
 #include <stdint.h>
+#include <openssl/sha.h>
 #include "moxie.h"
 
 enum {
 	MACH_PAGE_SIZE = 4096,
 	MACH_PAGE_MASK = (MACH_PAGE_SIZE-1),
+};
+
+static inline bool eqVec(const std::vector<unsigned char>& a,
+			 const std::vector<unsigned char>& b)
+{
+	if (a.size() != b.size())
+		return false;
+	
+	return (memcmp(&a[0], &b[0], a.size()) == 0);
+}
+
+class sha256hash {
+private:
+	SHA256_CTX ctx;
+
+public:
+	sha256hash() {
+		clear();
+	}
+
+	void clear() { SHA256_Init(&ctx); }
+	void update(const void *p, size_t len) { SHA256_Update(&ctx, p, len); }
+	void final(std::vector<unsigned char>& digest) {
+		digest.resize(SHA256_DIGEST_LENGTH);
+		SHA256_Final(&digest[0], &ctx);
+	}
+};
+
+class mfile {
+public:
+	int fd;
+	void *data;
+	struct stat st;
+	std::string pathname;
+
+	mfile(const std::string& pathname_ = "") {
+		fd = -1;
+		data = NULL;
+		pathname = pathname_;
+	}
+	~mfile() {
+		if (data)
+			munmap(data, st.st_size);
+		if (fd >= 0)
+			close(fd);
+	}
+
+	bool open(int flags, mode_t mode = 0, bool map = true);
+};
+
+class mdir {
+public:
+	DIR *d;
+	std::string pathname;
+
+	mdir(const std::string& pathname_ = "") {
+		d = NULL;
+		pathname = pathname_;
+	}
+	~mdir() {
+		if (d)
+			closedir(d);
+	}
+
+	bool open() {
+		d = opendir(pathname.c_str());
+		return (d != NULL);
+	}
+	struct dirent *read() { return readdir(d); }
 };
 
 struct mach_memmap_ent {
@@ -89,6 +164,13 @@ public:
 };
 
 extern void sim_resume (machine& mach, unsigned long long cpu_budget = 0);
-extern bool loadElfProgram(machine& mach, const char *filename);
+extern bool loadElfProgram(machine& mach, const std::string& filename);
+extern bool loadElfHash(machine& mach, const char *hash,
+			const std::vector<std::string>& pathExec);
+
+extern signed char HexDigit(char c);
+extern bool IsHex(const std::string& str);
+extern std::vector<unsigned char> ParseHex(const char* psz);
+extern std::vector<unsigned char> ParseHex(const std::string& str);
 
 #endif // __SANDBOX_H__
