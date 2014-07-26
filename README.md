@@ -31,3 +31,11 @@ http://moxielogic.org/wiki/index.php/Main_Page and
 http://moxielogic.org/blog/  The main code repository is
 https://github.com/atgreen/moxie-cores.
 
+Example usage:
+
+	./sandbox \
+		-e runtime/test1 \
+		-d mydata.json \
+		-d mydata2.dat \
+		-o file.out
+
