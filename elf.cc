@@ -106,7 +106,7 @@ bool loadElfProgram(machine& mach, const string& filename)
 	return loadElfFile(mach, pf);
 }
 
-bool loadElfHash(machine& mach, const char *hash,
+bool loadElfHash(machine& mach, const string& hash,
 		 const std::vector<std::string>& pathExec)
 {
 	vector<unsigned char> digest = ParseHex(hash);
