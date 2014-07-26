@@ -137,8 +137,7 @@ bool loadElfHash(machine& mach, const char *hash,
 				continue;
 			}
 
-			sha256hash hash;
-			hash.update(pf.data, pf.st.st_size);
+			sha256hash hash(pf.data, pf.st.st_size);
 
 			vector<unsigned char> tmpHash;
 			hash.final(tmpHash);

@@ -32,8 +32,10 @@ private:
 	SHA256_CTX ctx;
 
 public:
-	sha256hash() {
+	sha256hash(const void *p = NULL, size_t len = 0) {
 		clear();
+		if (p && len)
+			update(p, len);
 	}
 
 	void clear() { SHA256_Init(&ctx); }
