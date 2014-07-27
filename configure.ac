@@ -2,7 +2,7 @@ AC_INIT([moxiebox], [0.0.2],
         [http://github.com/jgarzik/moxiebox/])
 
 AC_PREREQ(2.52)
-AC_CONFIG_SRCDIR([sandbox.cc])
+AC_CONFIG_SRCDIR([src/sandbox.cc])
 AM_INIT_AUTOMAKE([gnu])
 AC_CONFIG_HEADERS([moxiebox-config.h])
 
@@ -36,6 +36,9 @@ AC_SUBST(MOX_AS)
 AC_SUBST(MOX_AR)
 AC_SUBST(MOX_GCC)
 
-AC_CONFIG_FILES([Makefile runtime/Makefile])
+AC_CONFIG_FILES([
+	Makefile
+	runtime/Makefile
+	src/Makefile])
 AC_OUTPUT
 
