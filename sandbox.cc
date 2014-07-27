@@ -257,15 +257,16 @@ int main (int argc, char *argv[])
 	mach.cpu.asregs.regs[PC_REGNO] = mach.startAddr;
 	sim_resume(mach);
 
-	if (mach.cpu.asregs.exception) {
+	if (mach.cpu.asregs.exception != SIGQUIT) {
 		fprintf(stderr, "Sim exception %d (%s)\n",
 			mach.cpu.asregs.exception,
 			strsignal(mach.cpu.asregs.exception));
-
-		if (mach.cpu.asregs.exception == SIGQUIT)
-			gatherOutput(mach, outFilename);
+		exit(EXIT_FAILURE);
 	}
 
+	gatherOutput(mach, outFilename);
+
+	// Decide: return _exit() status?
 	return 0;
 }
 
