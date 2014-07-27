@@ -16,9 +16,13 @@ AC_PROG_OBJC
 AC_PROG_LN_S
 AC_PROG_MKDIR_P
 AC_PROG_SED
+AM_PROG_AS
 AC_PATH_TOOL(AR, ar)
 AC_PATH_TOOL(RANLIB, ranlib)
 AC_PATH_TOOL(STRIP, strip)
+AC_CHECK_PROG(MOX_AS, moxie-elf-as, moxie-elf-as)
+AC_CHECK_PROG(MOX_AR, moxie-elf-ar, moxie-elf-ar)
+AC_CHECK_PROG(MOX_GCC, moxie-elf-gcc, moxie-elf-gcc)
 PKG_PROG_PKG_CONFIG
 
 AC_LANG_PUSH([C++])
@@ -28,7 +32,10 @@ AC_CHECK_LIB(crypto, SHA256_Update, CRYPTO_LIBS=-lcrypto,AC_MSG_ERROR([Libcrypto
 
 AC_SUBST(ELF_LIBS)
 AC_SUBST(CRYPTO_LIBS)
+AC_SUBST(MOX_AS)
+AC_SUBST(MOX_AR)
+AC_SUBST(MOX_GCC)
 
-AC_CONFIG_FILES([Makefile])
+AC_CONFIG_FILES([Makefile runtime/Makefile])
 AC_OUTPUT
 

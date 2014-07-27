@@ -1,6 +1,8 @@
 
 noinst_PROGRAMS = sandbox
 
+SUBDIRS = runtime
+
 sandbox_SOURCES = \
 	elf.cc \
 	machine.cc \
