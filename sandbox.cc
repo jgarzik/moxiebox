@@ -17,37 +17,26 @@ using namespace std;
 static const uint32_t STACK_SIZE = 64 * 1024;
 
 
-bool loadRawData(machine& mach, const char *filename)
+bool loadRawData(machine& mach, const string& filename)
 {
-	int fd;
-	if (( fd = open ( filename, O_RDONLY , 0)) < 0)
+	// open and mmap input file
+	mfile pf(filename);
+	if (!pf.open(O_RDONLY))
 		return false;
-
-	struct stat st;
-	if (fstat(fd, &st) < 0) {
-		close(fd);
-		return false;
-	}
-
-	void *p;
-	p = mmap(NULL, st.st_size, PROT_READ, MAP_PRIVATE, fd, 0);
-	if (p == (void *)-1) {
-		close(fd);
-		return false;
-	}
 
 	static unsigned int dataCount = 0;
 	char tmpstr[32];
 
+	// alloc new data memory range
 	sprintf(tmpstr, "data%u", dataCount++);
-	addressRange *rdr = new addressRange(tmpstr, st.st_size);
+	size_t sz = pf.st.st_size;
+	addressRange *rdr = new addressRange(tmpstr, sz);
 
-	rdr->buf.assign((char *) p, (size_t) st.st_size);
+	// copy mmap'd data into local buffer
+	rdr->buf.assign((char *) pf.data, sz);
 	rdr->updateRoot();
 
-	munmap(p, st.st_size);
-	close(fd);
-
+	// add to global memory map
 	return mach.mapInsert(rdr);
 }
 

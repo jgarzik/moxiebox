@@ -105,6 +105,10 @@ bool mfile::open(int flags, mode_t mode, bool map)
 	if (fstat(fd, &st) < 0)
 		return false;
 
+	// cannot mmap zero-length files
+	if (st.st_size == 0)
+		return true;
+
 	// sanity check
 	if (st.st_size > (1 * 1024 * 1024 * 1024))
 		return false;
