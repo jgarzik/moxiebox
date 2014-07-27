@@ -1,3 +1,3 @@
 
-SUBDIRS = runtime src
+SUBDIRS = runtime src tests
 

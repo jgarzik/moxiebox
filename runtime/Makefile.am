@@ -1,6 +1,5 @@
 
 noinst_LIBRARIES = libsandboxrt.a
-noinst_PROGRAMS = test1
 
 libsandboxrt_a_SOURCES = \
 	crt0.S \
@@ -9,8 +8,6 @@ libsandboxrt_a_SOURCES = \
 	sys-mmap.S \
 	memmap.c \
 	sandboxrt.h
-
-test1_SOURCES = test1.c
 
 MOX_LIB_OBJS = \
 	crt0.o \
@@ -34,8 +31,3 @@ sys-mmap.o:	sys-mmap.S
 
 memmap.o:	memmap.c
 	$(MOX_GCC) -Wall -O2 -mel -static -nostdlib -c $<
-test1.o:	test1.c
-	$(MOX_GCC) -Wall -O2 -mel -static -nostdlib -c $<
-test1$(EXEEXT):	test1.o libsandboxrt.a
-	$(MOX_GCC) -Wall -O2 -mel -static -nostdlib -o $@ test1.o libsandboxrt.a
-
