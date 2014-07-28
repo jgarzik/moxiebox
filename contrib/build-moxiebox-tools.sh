@@ -83,3 +83,12 @@ PATH=$PREFIX/bin:$PATH
                        --with-headers=$PREFIX/moxiebox/include;
   make -j$MAKEJOBS all;
   make install)
+
+if ! test -f root/usr/moxiebox/lib/crt0.o; then
+  (cd root/usr/moxiebox/lib; ln -s ../../../../../runtime/crt0.o .)
+fi 
+
+if ! test -f root/usr/moxiebox/lib/libsandboxrt.a; then
+  (cd root/usr/moxiebox/lib; ln -s ../../../../../runtime/libsandboxrt.a .)
+fi
+
