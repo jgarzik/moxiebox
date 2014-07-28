@@ -1,5 +1,8 @@
 
 basic
+exit0
+exit1
+
 *.log
 *.trs
 

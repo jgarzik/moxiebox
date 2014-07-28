@@ -266,7 +266,7 @@ int main (int argc, char *argv[])
 
 	gatherOutput(mach, outFilename);
 
-	// Decide: return _exit() status?
-	return 0;
+	// return $r0, the exit status passed to _exit()
+	return mach.cpu.asregs.regs[2];
 }
 
