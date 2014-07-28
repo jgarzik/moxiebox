@@ -21,3 +21,9 @@ stamp-h1
 
 test-driver
 
+contrib/src
+contrib/gcc
+contrib/binutils-gdb
+contrib/root
+contrib/buildmoxiebox
+
