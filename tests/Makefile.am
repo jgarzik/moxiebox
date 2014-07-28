@@ -9,7 +9,7 @@ noinst_PROGRAMS = \
 basic_SOURCES = basic.c
 
 basic.o:	basic.c
-	$(MOX_GCC) -I$(top_srcdir)/runtime -Wall -O2 -mel -static -nostdlib -c $<
+	$(MOX_GCC) -I$(top_srcdir)/runtime -Wall -O2 -c $<
 basic$(EXEEXT):	basic.o ../runtime/libsandboxrt.a
-	$(MOX_GCC) -Wall -O2 -mel -static -nostdlib -o $@ basic.o ../runtime/libsandboxrt.a
+	$(MOX_GCC) -Wall -O2 -o $@ basic.o ../runtime/crt0.o
 

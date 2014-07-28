@@ -17,17 +17,17 @@ MOX_LIB_OBJS = \
 	sys-mmap.o
 
 libsandboxrt.a: $(MOX_LIB_OBJS)
-	$(MOX_AR) rvs --target=elf32-littlemoxie libsandboxrt.a \
+	$(MOX_AR) rvs libsandboxrt.a \
 		$(MOX_LIB_OBJS)
 
 crt0.o:	crt0.S
-	$(MOX_AS) -EL -o $@ $<
+	$(MOX_AS) -o $@ $<
 setreturn.o:	setreturn.S
-	$(MOX_AS) -EL -o $@ $<
+	$(MOX_AS) -o $@ $<
 sys-_exit.o:	sys-_exit.S
-	$(MOX_AS) -EL -o $@ $<
+	$(MOX_AS) -o $@ $<
 sys-mmap.o:	sys-mmap.S
-	$(MOX_AS) -EL -o $@ $<
+	$(MOX_AS) -o $@ $<
 
 memmap.o:	memmap.c
-	$(MOX_GCC) -Wall -O2 -mel -static -nostdlib -c $<
+	$(MOX_GCC) -Wall -O2 -c $<
