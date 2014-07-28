@@ -22,12 +22,11 @@
 
 svn checkout svn://gcc.gnu.org/svn/gcc/trunk gcc
 
-git clone git://sourceware.org/git/binutils-gdb.git
+git clone --depth=1 git://sourceware.org/git/binutils-gdb.git
 
 cvs -z3 -d:pserver:anoncvs@sourceware.org:/cvs/src co \
     newlib \
     libgloss
 
-(cd gcc; patch -p1 < ../config.sub-moxiebox.patch)
 cp gcc/config.sub binutils-gdb
 cp gcc/config.sub src
