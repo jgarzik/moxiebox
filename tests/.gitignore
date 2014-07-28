@@ -1,5 +1,7 @@
 
 basic
+sha256-test
+
 *.log
 *.trs
 
