@@ -38,7 +38,7 @@ strstr(string, substring)
     const char *string;	/* String to search. */
     const char *substring;		/* Substring to try to find in string. */
 {
-    register char *a, *b;
+    const char *a, *b;
 
     /* First scan quickly through the two strings looking for a
      * single-character match.  When it's found, then compare the

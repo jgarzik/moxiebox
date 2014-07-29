@@ -1,7 +1,7 @@
 
 TESTS = run-basic.sh run-sha256.sh
 
-EXTRA_DIST = run-basic.sh run-sha256.sh
+EXTRA_DIST = run-basic.sh run-sha256.sh random.data random.data.sum
 
 noinst_PROGRAMS = \
 	basic sha256-test
