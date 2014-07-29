@@ -2,7 +2,6 @@
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <sys/mman.h>
-#include <sys/wait.h>
 #include <fcntl.h>
 #include <string>
 #include <vector>
@@ -183,15 +182,13 @@ static bool isDir(const char *pathname)
 	return S_ISDIR(st.st_mode);
 }
 
-int main (int argc, char *argv[])
+static void sandboxInit(machine& mach, int argc, char **argv,
+			string& outFilename)
 {
-	machine mach;
-
 	vector<string> pathExec;
 	vector<string> pathData;
 
 	bool progLoaded = false;
-	string outFilename;
 	int opt;
 	while ((opt = getopt(argc, argv, "E:e:D:d:o:t")) != -1) {
 		switch(opt) {
@@ -220,7 +217,7 @@ int main (int argc, char *argv[])
 				fprintf(stderr, "%s not a directory\n", optarg);
 				exit(EXIT_FAILURE);
 			}
-			pathExec.push_back(optarg);
+			pathData.push_back(optarg);
 			break;
 		case 'd':
 			if (!loadRawData(mach, optarg)) {
@@ -253,43 +250,30 @@ int main (int argc, char *argv[])
 	addStackMem(mach);
 	addMapDescriptor(mach);
 
-	printMemMap(mach);
-
 	mach.cpu.asregs.regs[PC_REGNO] = mach.startAddr;
 
-	// create new child process
-	pid_t child = fork();
-	if (child == -1) {
-		perror("fork");
+	printMemMap(mach);
+}
+
+int main (int argc, char *argv[])
+{
+	machine mach;
+	string outFilename;
+
+	sandboxInit(mach, argc, argv, outFilename);
+
+	sim_resume(mach);
+
+	if (mach.cpu.asregs.exception != SIGQUIT) {
+		fprintf(stderr, "Sim exception %d (%s)\n",
+			mach.cpu.asregs.exception,
+			strsignal(mach.cpu.asregs.exception));
 		exit(EXIT_FAILURE);
 	}
 
-	// child executes sandbox
-	if (child == 0) {
-		sim_resume(mach);
+	gatherOutput(mach, outFilename);
 
-		if (mach.cpu.asregs.exception != SIGQUIT) {
-			fprintf(stderr, "Sim exception %d (%s)\n",
-				mach.cpu.asregs.exception,
-				strsignal(mach.cpu.asregs.exception));
-			exit(EXIT_FAILURE);
-		}
-
-		gatherOutput(mach, outFilename);
-
-		// return $r0, the exit status passed to _exit()
-		exit(mach.cpu.asregs.regs[2] & 0xff);
-
-	// parent waits
-	} else {
-		int status = 0;
-		pid_t res = wait(&status);
-		if (res == -1)
-			perror("wait");
-
-		return WEXITSTATUS(status);
-	}
-
-	return EXIT_FAILURE;	// not reached
+	// return $r0, the exit status passed to _exit()
+	return (mach.cpu.asregs.regs[2] & 0xff);
 }
 
