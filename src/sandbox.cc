@@ -182,15 +182,13 @@ static bool isDir(const char *pathname)
 	return S_ISDIR(st.st_mode);
 }
 
-int main (int argc, char *argv[])
+static void sandboxInit(machine& mach, int argc, char **argv,
+			string& outFilename)
 {
-	machine mach;
-
 	vector<string> pathExec;
 	vector<string> pathData;
 
 	bool progLoaded = false;
-	string outFilename;
 	int opt;
 	while ((opt = getopt(argc, argv, "E:e:D:d:o:t")) != -1) {
 		switch(opt) {
@@ -252,9 +250,18 @@ int main (int argc, char *argv[])
 	addStackMem(mach);
 	addMapDescriptor(mach);
 
-	printMemMap(mach);
-
 	mach.cpu.asregs.regs[PC_REGNO] = mach.startAddr;
+
+	printMemMap(mach);
+}
+
+int main (int argc, char *argv[])
+{
+	machine mach;
+	string outFilename;
+
+	sandboxInit(mach, argc, argv, outFilename);
+
 	sim_resume(mach);
 
 	if (mach.cpu.asregs.exception != SIGQUIT) {
