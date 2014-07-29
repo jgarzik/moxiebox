@@ -219,7 +219,7 @@ int main (int argc, char *argv[])
 				fprintf(stderr, "%s not a directory\n", optarg);
 				exit(EXIT_FAILURE);
 			}
-			pathExec.push_back(optarg);
+			pathData.push_back(optarg);
 			break;
 		case 'd':
 			if (!loadRawData(mach, optarg)) {
