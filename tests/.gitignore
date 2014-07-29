@@ -2,6 +2,7 @@
 basic
 exit0
 exit1
+sha256-test
 
 *.log
 *.trs
