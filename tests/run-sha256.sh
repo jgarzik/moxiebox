@@ -10,5 +10,13 @@ if [ $? -ne 0 ]; then
 	exit 1
 fi
 
-exec cmp -q $TFN $BFN
+cmp -s $TFN $BFN
+RET=$?
 
+rm -f $TFN
+
+if [ $RET -ne 0 ]; then
+	exit 1
+fi
+
+exit 0

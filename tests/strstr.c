@@ -1,68 +1,71 @@
-/* 
- * strstr.c --
- *
- *	Source code for the "strstr" library routine.
- *
- * Copyright (c) 1988-1993 The Regents of the University of California.
- * Copyright (c) 1994 Sun Microsystems, Inc.
- *
- * See the file "license.terms" for information on usage and redistribution
- * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
- *
- * SCCS: @(#) strstr.c 1.4 96/02/15 12:08:22
- */
-
 /*
- *----------------------------------------------------------------------
- *
- * strstr --
- *
- *	Locate the first instance of a substring in a string.
- *
- * Results:
- *	If string contains substring, the return value is the
- *	location of the first matching instance of substring
- *	in string.  If string doesn't contain substring, the
- *	return value is 0.  Matching is done on an exact
- *	character-for-character basis with no wildcards or special
- *	characters.
- *
- * Side effects:
- *	None.
- *
- *----------------------------------------------------------------------
- */
+FUNCTION
+	<<strstr>>---find string segment
 
-char *
-strstr(string, substring)
-    const char *string;	/* String to search. */
-    const char *substring;		/* Substring to try to find in string. */
+INDEX
+	strstr
+
+ANSI_SYNOPSIS
+	#include <string.h>
+	char *strstr(const char *<[s1]>, const char *<[s2]>);
+
+TRAD_SYNOPSIS
+	#include <string.h>
+	char *strstr(<[s1]>, <[s2]>)
+	char *<[s1]>;
+	char *<[s2]>;
+
+DESCRIPTION
+	Locates the first occurrence in the string pointed to by <[s1]> of
+	the sequence of characters in the string pointed to by <[s2]>
+	(excluding the terminating null character).
+
+RETURNS
+	Returns a pointer to the located string segment, or a null
+	pointer if the string <[s2]> is not found. If <[s2]> points to
+	a string with zero length, <[s1]> is returned.
+
+PORTABILITY
+<<strstr>> is ANSI C.
+
+<<strstr>> requires no supporting OS subroutines.
+
+QUICKREF
+	strstr ansi pure
+*/
+
+#include <stddef.h>
+
+char *strstr(const char *searchee, const char *lookfor)
 {
-    const char *a, *b;
-
-    /* First scan quickly through the two strings looking for a
-     * single-character match.  When it's found, then compare the
-     * rest of the substring.
-     */
-
-    b = substring;
-    if (*b == 0) {
-	return string;
+  /* Less code size, but quadratic performance in the worst case.  */
+  if (*searchee == 0)
+    {
+      if (*lookfor)
+	return (char *) NULL;
+      return (char *) searchee;
     }
-    for ( ; *string != 0; string += 1) {
-	if (*string != *b) {
-	    continue;
-	}
-	a = string;
-	while (1) {
-	    if (*b == 0) {
-		return string;
+
+  while (*searchee)
+    {
+      size_t i;
+      i = 0;
+
+      while (1)
+	{
+	  if (lookfor[i] == 0)
+	    {
+	      return (char *) searchee;
 	    }
-	    if (*a++ != *b++) {
-		break;
+
+	  if (lookfor[i] != searchee[i])
+	    {
+	      break;
 	    }
+	  i++;
 	}
-	b = substring;
+      searchee++;
     }
-    return (char *) 0;
+
+  return (char *) NULL;
 }

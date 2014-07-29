@@ -11,6 +11,8 @@ static void find_data(void)
 	while (data->addr) {
 		if (strstr(data->tags, "data0,"))
 			return;
+
+		data++;
 	}
 
 	_exit(1);
@@ -26,7 +28,7 @@ static void hash_data(void)
 
 static void output_result(void)
 {
-	void *result = mmap(NULL, SHA256_BLOCK_SIZE,
+	void *result = mmap(NULL, MACH_PAGE_SIZE,
 			    MOXIE_PROT_EXEC|MOXIE_PROT_READ|MOXIE_PROT_WRITE,
 			    MOXIE_MAP_PRIVATE|MOXIE_MAP_ANONYMOUS, 0, 0);
 	if (result == (void *)-1)
