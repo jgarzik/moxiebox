@@ -2,6 +2,7 @@
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <sys/mman.h>
+#include <sys/wait.h>
 #include <fcntl.h>
 #include <string>
 #include <vector>
@@ -255,18 +256,40 @@ int main (int argc, char *argv[])
 	printMemMap(mach);
 
 	mach.cpu.asregs.regs[PC_REGNO] = mach.startAddr;
-	sim_resume(mach);
 
-	if (mach.cpu.asregs.exception != SIGQUIT) {
-		fprintf(stderr, "Sim exception %d (%s)\n",
-			mach.cpu.asregs.exception,
-			strsignal(mach.cpu.asregs.exception));
+	// create new child process
+	pid_t child = fork();
+	if (child == -1) {
+		perror("fork");
 		exit(EXIT_FAILURE);
 	}
 
-	gatherOutput(mach, outFilename);
+	// child executes sandbox
+	if (child == 0) {
+		sim_resume(mach);
 
-	// return $r0, the exit status passed to _exit()
-	return mach.cpu.asregs.regs[2];
+		if (mach.cpu.asregs.exception != SIGQUIT) {
+			fprintf(stderr, "Sim exception %d (%s)\n",
+				mach.cpu.asregs.exception,
+				strsignal(mach.cpu.asregs.exception));
+			exit(EXIT_FAILURE);
+		}
+
+		gatherOutput(mach, outFilename);
+
+		// return $r0, the exit status passed to _exit()
+		exit(mach.cpu.asregs.regs[2] & 0xff);
+
+	// parent waits
+	} else {
+		int status = 0;
+		pid_t res = wait(&status);
+		if (res == -1)
+			perror("wait");
+
+		return WEXITSTATUS(status);
+	}
+
+	return EXIT_FAILURE;	// not reached
 }
 
