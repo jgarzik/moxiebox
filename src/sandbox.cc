@@ -274,6 +274,6 @@ int main (int argc, char *argv[])
 	gatherOutput(mach, outFilename);
 
 	// return $r0, the exit status passed to _exit()
-	return mach.cpu.asregs.regs[2];
+	return (mach.cpu.asregs.regs[2] & 0xff);
 }
 
