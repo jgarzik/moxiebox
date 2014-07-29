@@ -1,7 +1,7 @@
 #!/bin/sh
 
 TFN=SHA256-TEST.tmp$$
-BFN=random.data.sum
+BFN=$TOP_SRCDIR/tests/random.data.sum
 
 rm -f $FN
 
