@@ -20,9 +20,9 @@ AM_PROG_AS
 AC_PATH_TOOL(AR, ar)
 AC_PATH_TOOL(RANLIB, ranlib)
 AC_PATH_TOOL(STRIP, strip)
-AC_CHECK_PROG(MOX_AS, moxie-elf-as, moxie-elf-as)
-AC_CHECK_PROG(MOX_AR, moxie-elf-ar, moxie-elf-ar)
-AC_CHECK_PROG(MOX_GCC, moxie-elf-gcc, moxie-elf-gcc)
+AC_CHECK_PROG(MOX_AS, moxiebox-as, moxiebox-as)
+AC_CHECK_PROG(MOX_AR, moxiebox-ar, moxiebox-ar)
+AC_CHECK_PROG(MOX_GCC, moxiebox-gcc, moxiebox-gcc)
 PKG_PROG_PKG_CONFIG
 
 AC_LANG_PUSH([C++])
