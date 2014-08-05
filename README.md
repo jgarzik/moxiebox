@@ -7,20 +7,25 @@ separated out into distinct phases:
 
 1. Prepare and load hash-sealed program executables, data.
 2. Execute program as a black box, with no I/O capability.
-   Runs until exit or CPU budget exhausted.
+   Runs until exit or CPU budget exhausted (or CPU exception).
 3. Gather processed data, if any.
 
-A single thread of execution pre-loads necessary data, runs a 32-bit
-little endian Moxie ELF binary.  This program is built using the
-"moxie-elf" target in upstream binutils and gcc.  You will need to build
-and install moxie binutils+gcc cross-compiler toolset.
+A single thread of execution pre-loads necessary data, then simulates a
+32-bit little endian Moxie CPU, running the loaded code.
+
+This program is built using the "moxie-elf" target in upstream
+binutils and gcc.  A reduced (C-only) gcc toolchain is therefore
+available for immediate use by developers.
+
+You will need to build and install moxie binutils+gcc cross-compiler
+toolset.
 ```
-	git clone git://sourceware.org/git/binutils-gdb.git
-	git clone git://gcc.gnu.org/git/gcc.git
+	git clone git://sourceware.org/git/binutils-gdb.git git clone
+	git://gcc.gnu.org/git/gcc.git
 ```
-From the Moxie program's point of view, it is running as root and is
-essentially the entire operating system kernel + application, all in
-a single wrapper.
+From the Moxie program's point of view, it is a single thread running
+as root and is essentially the entire operating system kernel +
+application, all in a single wrapper.
 
 From the sandbox's point of view, the application is running as an
 unpriv'd application with only the ability to access data within the
