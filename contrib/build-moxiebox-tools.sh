@@ -28,7 +28,7 @@ if ! test -f src/src-release; then
   exit 1
 fi
 
-if ! test -f binutils-gdb/src-release; then
+if ! test -f binutils-gdb/src-release*; then
   echo "ERROR: missing binutils-gdb tree."
   exit 1
 fi
