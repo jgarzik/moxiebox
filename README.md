@@ -18,11 +18,14 @@ binutils and gcc.  A reduced (C-only) gcc toolchain is therefore
 available for immediate use by developers.
 
 You will need to build and install moxie binutils+gcc cross-compiler
-toolset.
+toolset:
+
+```bash
+    cd contrib
+    ./download-tools-sources.sh
+    ./build-moxiebox-tools.sh
 ```
-	git clone git://sourceware.org/git/binutils-gdb.git git clone
-	git://gcc.gnu.org/git/gcc.git
-```
+
 From the Moxie program's point of view, it is a single thread running
 as root and is essentially the entire operating system kernel +
 application, all in a single wrapper.
