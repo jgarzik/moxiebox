@@ -13,9 +13,9 @@ separated out into distinct phases:
 A single thread of execution pre-loads necessary data, then simulates a
 32-bit little endian Moxie CPU, running the loaded code.
 
-This program is built using the "moxie-elf" target in upstream
-binutils and gcc.  A reduced (C-only) gcc toolchain is therefore
-available for immediate use by developers.
+This program is built using the "moxiebox" target in upstream binutils
+and gcc.  A reduced (C-only) gcc toolchain is therefore available for
+immediate use by developers.
 
 You will need to build and install moxie binutils+gcc cross-compiler
 toolset.
@@ -32,8 +32,8 @@ unpriv'd application with only the ability to access data within the
 hand-built memory map.
 
 More info about the Moxie architecture may be found at
-http://moxielogic.org/wiki/index.php/Main_Page and
-http://moxielogic.org/blog/  The main code repository is
+http://moxielogic.org/blog/pages/architecture.html and
+http://moxielogic.org/blog/ . The main code repository is
 https://github.com/atgreen/moxie-cores.
 
 Example usage:
