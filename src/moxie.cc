@@ -545,8 +545,32 @@ sim_resume (machine& mach, unsigned long long cpu_budget)
 		cpu.asregs.regs[a] = (int) bv & 0xffff;
 	      }
 	      break;
-	    case 0x14: /* bad */
-	    case 0x15: /* bad */
+	    case 0x14: /* mul.x */
+	      {
+		int a = (inst >> 4) & 0xf;
+		int b = inst & 0xf;
+		unsigned av = cpu.asregs.regs[a];
+		unsigned bv = cpu.asregs.regs[b];
+		signed long long r = 
+		  (signed long long) av * (signed long long) bv;
+
+		TRACE("mul.x");
+		cpu.asregs.regs[a] = r >> 32;
+	      }
+	      break;
+	    case 0x15: /* umul.x */
+	      {
+		int a = (inst >> 4) & 0xf;
+		int b = inst & 0xf;
+		unsigned av = cpu.asregs.regs[a];
+		unsigned bv = cpu.asregs.regs[b];
+		unsigned long long r = 
+		  (unsigned long long) av * (unsigned long long) bv;
+
+		TRACE("umul.x");
+		cpu.asregs.regs[a] = r >> 32;
+	      }
+	      break;
 	    case 0x16: /* bad */
 	    case 0x17: /* bad */
 	    case 0x18: /* bad */
