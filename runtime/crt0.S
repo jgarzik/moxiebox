@@ -30,7 +30,7 @@ _start:
 	ldi.l	$r0, __bss_start__
 	xor	$r1, $r1
 	ldi.l	$r2, __bss_end__
-	sub.l	$r2, $r0
+	sub	$r2, $r0
 	jsra	memset
 
 	/* load sim memory descriptor base address */
