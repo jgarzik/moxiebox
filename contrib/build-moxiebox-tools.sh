@@ -84,6 +84,10 @@ PATH=$PREFIX/bin:$PATH
   make -j$MAKEJOBS all;
   make install)
 
+(cd buildmoxiebox/binutils-gdb;
+  make -j$MAKEJOBS all-gdb;
+  make install-gdb)
+
 if ! test -f root/usr/moxiebox/lib/crt0.o; then
   (cd root/usr/moxiebox/lib; ln -s ../../../../../runtime/crt0.o .)
 fi 

@@ -1,3 +1,4 @@
+#include "moxiebox-config.h"
 
 #include <sys/types.h>
 #include <sys/stat.h>
@@ -11,6 +12,11 @@
 #include <unistd.h>
 #include <signal.h>
 #include "sandbox.h"
+
+#ifdef MOXIEBOX_GDB
+#include <sys/socket.h>
+#include <netinet/in.h>
+#endif
 
 using namespace std;
 
@@ -52,6 +58,9 @@ static void usage(const char *progname)
 		"-d <file>\t\tLoad data into address space\n"
 		"-o <file>\t\tOutput data to <file>.  \"-\" for stdout\n"
 		"-t\t\t\tEnabling simulator tracing\n"
+#ifdef MOXIEBOX_GDB
+		"-g <port>\t\tWait for GDB connection on given port\n"
+#endif
 		,
 		progname);
 }
@@ -120,7 +129,6 @@ static void addMapDescriptor(machine& mach)
 		memcpy(&ar->buf[i * sizeof(mme)], &mme, sizeof(mme));
 	}
 
-
 	// add memory range to global memory map
 	mach.mapInsert(ar);
 
@@ -182,15 +190,21 @@ static bool isDir(const char *pathname)
 	return S_ISDIR(st.st_mode);
 }
 
+#ifdef MOXIEBOX_GDB
+#define GDB_GETOPT_OPTION "g:"
+#else
+#define GDB_GETOPT_OPTION ""
+#endif
+
 static void sandboxInit(machine& mach, int argc, char **argv,
-			string& outFilename)
+			string& outFilename, uint32_t& gdbPort)
 {
 	vector<string> pathExec;
 	vector<string> pathData;
 
 	bool progLoaded = false;
 	int opt;
-	while ((opt = getopt(argc, argv, "E:e:D:d:o:t")) != -1) {
+	while ((opt = getopt(argc, argv, "E:e:D:d:o:t" GDB_GETOPT_OPTION)) != -1) {
 		switch(opt) {
 		case 'E':
 			if (!isDir(optarg)) {
@@ -235,6 +249,12 @@ static void sandboxInit(machine& mach, int argc, char **argv,
 			mach.tracing = true;
 			break;
 
+#ifdef MOXIEBOX_GDB
+		case 'g':
+			gdbPort = atoi(optarg);
+			break;
+#endif
+
 		default:
 			usage(argv[0]);
 			exit(EXIT_FAILURE);
@@ -255,14 +275,254 @@ static void sandboxInit(machine& mach, int argc, char **argv,
 	printMemMap(mach);
 }
 
-int main (int argc, char *argv[])
+#ifdef MOXIEBOX_GDB
+
+static char lowNibbleToHex(int nibble)
+{
+	static const char *hex = "0123456789ABCDEF";
+	return hex[nibble & 0xf];
+}
+
+static char *lowByteToHex(int byte)
+{
+	static char buf[3];
+	buf[0] = lowNibbleToHex(byte >> 4);
+	buf[1] = lowNibbleToHex(byte);
+	buf[2] = 0;
+	return buf;
+}
+
+void sendGdbReply(int fd, char *msg)
+{
+	char csum = 0;
+	int i;
+
+	for (i = 0; i < strlen(msg); i++)
+		csum += msg[i];
+
+	write(fd, "+$", 2);
+	write(fd, msg, strlen(msg));
+	write(fd, "#", 1);
+	write(fd, lowByteToHex(csum), 2);
+}
+
+static int hex2int(char c)
+{
+	switch (c) {
+	case '0': case '1': case '2': case '3': case '4':
+	case '5': case '6': case '7': case '8': case '9':
+		return c - '0';
+	case 'A': case 'B': case 'C':
+	case 'D': case 'E': case 'F':
+		return c - 'A' + 10;
+	case 'a': case 'b': case 'c':
+	case 'd': case 'e': case 'f':
+		return c - 'a' + 10;
+	default:
+		return -1;
+	}
+}
+
+static char *word2hex(int word)
+{
+	static char buf[9];
+	int i;
+	for (i = 0; i < 8; i++)
+		buf[i] = lowNibbleToHex(word >> (28 - i*4));
+	buf[8] = 0;
+	return buf;
+}
+
+static uint32_t readHexValueFixedLength(char *buffer,
+					int *index, int length)
+{
+	int n = 0;
+	int i = *index;
+
+	while (length--)
+	{
+		char c = buffer[i++];
+		int v = hex2int(c);
+		n = (n << 4) + v;
+	}
+	*index = i;
+	return n;
+}
+
+static uint32_t readDelimitedHexValue(char *buffer, int *index)
+{
+	int n = 0, v;
+	int i = *index;
+	do {
+		char c = buffer[i++];
+		v = hex2int(c);
+		if (v >= 0)
+			n = (n << 4) + v;
+	} while (v >= 0);
+	*index = i;
+	return n;
+}
+
+int gdb_main_loop (uint32_t& gdbPort, machine& mach)
+{
+	int sockfd, newsockfd, on;
+	struct sockaddr_in serv_addr, cli_addr;
+	socklen_t clilen;
+
+	sockfd = socket(AF_INET, SOCK_STREAM, 0);
+	if (sockfd < 0) {
+		perror("ERROR opening socket");
+		return EXIT_FAILURE;
+	}
+	on = 1;
+	setsockopt(sockfd, SOL_SOCKET,
+		   SO_REUSEADDR, (char*)&on, sizeof(on));
+	on = 1;
+	setsockopt(sockfd, SOL_SOCKET,
+		   SO_KEEPALIVE, (char*)&on, sizeof(on));
+	serv_addr.sin_family = AF_INET;
+	serv_addr.sin_addr.s_addr = htonl(INADDR_ANY);
+	serv_addr.sin_port = htons(gdbPort);
+	if (bind(sockfd,
+		 (struct sockaddr *) &serv_addr,
+		 sizeof(serv_addr)) < 0) {
+		close(sockfd);
+		perror("ERROR on binding");
+		return EXIT_FAILURE;
+	}
+	listen(sockfd,1);
+	clilen = sizeof(cli_addr);
+	newsockfd = accept(sockfd,
+			   (struct sockaddr *) &cli_addr,
+			   &clilen);
+
+	while (1) {
+		char buffer[255];
+		char reply[1024];
+		int i = 0, n = read(newsockfd,buffer,255);
+		buffer[n] = 0;
+		if (n <= 0) {
+			perror("ERROR reading from socket");
+			return EXIT_FAILURE;
+		}
+		while (buffer[i]) {
+			switch (buffer[i]) {
+			case '+':
+				i++;
+				break;
+			case '-':
+				// resend last response
+				i++;
+				break;
+			case '$':
+			{
+				switch (buffer[++i]) {
+				case '?':
+					sendGdbReply(newsockfd, (char *) "S05");
+					i += 4;
+					break;
+				case 'c':
+					write(newsockfd, "+", 1);
+					sim_resume(mach);
+					// FIXME.. assuming BREAK for now
+					sendGdbReply(newsockfd, (char *) "S05");
+					mach.cpu.asregs.regs[16] -= 2;
+					i += 4;
+					break;
+				case 'g':
+				{
+					int ri;
+					for (ri = 0; ri < 17; ri++)
+					{
+						uint32_t rv = mach.cpu.asregs.regs[ri];
+						sprintf(&reply[ri * 8],
+							"%02x%02x%02x%02x",
+							(rv >> 0) & 0xff,
+							(rv >> 8) & 0xff,
+							(rv >> 16) & 0xff,
+							(rv >> 24) & 0xff);
+					}
+					sendGdbReply(newsockfd, reply);
+					i += 4;
+				}
+				break;
+				case 'm':
+				{
+					uint32_t addr =
+						readDelimitedHexValue(buffer, &++i);
+					uint32_t length =
+						readDelimitedHexValue(buffer, &i);
+					char *p = (char *) mach.physaddr(addr, length);
+					reply[0] = 0;
+					while (length-- > 0)
+					{
+						int c = *p++;
+						strcat(reply, lowByteToHex(c));
+					}
+					sendGdbReply(newsockfd, reply);
+					i += 2;
+				}
+				break;
+				case 'M':
+				{
+					uint32_t addr =
+						readDelimitedHexValue(buffer, &++i);
+					uint32_t length =
+						readDelimitedHexValue(buffer, &i);
+					char *p = (char *) mach.physaddr(addr, length);
+					while (length-- > 0)
+						*p++ = readHexValueFixedLength(buffer, &i, 2);
+					sendGdbReply(newsockfd, (char *) "OK");
+					i += 2;
+				}
+				break;
+				case 'p':
+				{
+					int r = readDelimitedHexValue(buffer, &++i);
+					sendGdbReply(newsockfd,
+						     word2hex(mach.cpu.asregs.regs[r]));
+					i += 2;
+				}
+				break;
+				case 'P':
+				{
+					int r = readDelimitedHexValue(buffer, &++i);
+					word v = readDelimitedHexValue(buffer, &i);
+					mach.cpu.asregs.regs[r] = v;
+					sendGdbReply(newsockfd, (char *) "S05");
+					i += 2;
+				}
+				break;
+				default:
+					while (buffer[++i] != '#');
+					i += 3;
+					write(newsockfd,"+$#00", 5);
+					break;
+				}
+			}
+			break;
+			default:
+				i++;
+			}
+		}
+	}
+}
+#endif
+
+int main(int argc, char *argv[])
 {
 	machine mach;
 	string outFilename;
+	uint32_t gdbPort = 0;
 
-	sandboxInit(mach, argc, argv, outFilename);
+	sandboxInit(mach, argc, argv, outFilename, gdbPort);
 
-	sim_resume(mach);
+#ifdef MOXIEBOX_GDB
+	if (gdbPort)
+		gdb_main_loop(gdbPort, mach);
+	else
+#endif
+		sim_resume(mach);
 
 	if (mach.cpu.asregs.exception != SIGQUIT) {
 		fprintf(stderr, "Sim exception %d (%s)\n",
