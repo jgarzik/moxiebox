@@ -6,13 +6,6 @@ AC_CONFIG_SRCDIR([src/sandbox.cc])
 AM_INIT_AUTOMAKE([gnu])
 AC_CONFIG_HEADERS([moxiebox-config.h])
 
-AC_ARG_ENABLE(gdb,
-  [  --enable-gdb       enable GDB support],
-  if test "$enable_gdb" = "yes"; then
-    AC_DEFINE(MOXIEBOX_GDB, 1,
-      [Define this to enable GDB support])
-  fi)
-
 AC_PROG_CXX
 AC_PROG_CC
 AC_PROG_CPP

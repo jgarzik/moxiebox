@@ -10,13 +10,10 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <unistd.h>
-#include <signal.h>
-#include "sandbox.h"
-
-#ifdef MOXIEBOX_GDB
 #include <sys/socket.h>
 #include <netinet/in.h>
-#endif
+#include <signal.h>
+#include "sandbox.h"
 
 using namespace std;
 
@@ -58,9 +55,7 @@ static void usage(const char *progname)
 		"-d <file>\t\tLoad data into address space\n"
 		"-o <file>\t\tOutput data to <file>.  \"-\" for stdout\n"
 		"-t\t\t\tEnabling simulator tracing\n"
-#ifdef MOXIEBOX_GDB
 		"-g <port>\t\tWait for GDB connection on given port\n"
-#endif
 		,
 		progname);
 }
@@ -190,12 +185,6 @@ static bool isDir(const char *pathname)
 	return S_ISDIR(st.st_mode);
 }
 
-#ifdef MOXIEBOX_GDB
-#define GDB_GETOPT_OPTION "g:"
-#else
-#define GDB_GETOPT_OPTION ""
-#endif
-
 static void sandboxInit(machine& mach, int argc, char **argv,
 			string& outFilename, uint32_t& gdbPort)
 {
@@ -204,7 +193,7 @@ static void sandboxInit(machine& mach, int argc, char **argv,
 
 	bool progLoaded = false;
 	int opt;
-	while ((opt = getopt(argc, argv, "E:e:D:d:o:t" GDB_GETOPT_OPTION)) != -1) {
+	while ((opt = getopt(argc, argv, "E:e:D:d:o:tg:")) != -1) {
 		switch(opt) {
 		case 'E':
 			if (!isDir(optarg)) {
@@ -249,11 +238,9 @@ static void sandboxInit(machine& mach, int argc, char **argv,
 			mach.tracing = true;
 			break;
 
-#ifdef MOXIEBOX_GDB
 		case 'g':
 			gdbPort = atoi(optarg);
 			break;
-#endif
 
 		default:
 			usage(argv[0]);
@@ -275,8 +262,6 @@ static void sandboxInit(machine& mach, int argc, char **argv,
 	printMemMap(mach);
 }
 
-#ifdef MOXIEBOX_GDB
-
 static char lowNibbleToHex(int nibble)
 {
 	static const char *hex = "0123456789ABCDEF";
@@ -295,15 +280,18 @@ static char *lowByteToHex(int byte)
 void sendGdbReply(int fd, char *msg)
 {
 	char csum = 0;
-	int i;
+	unsigned int i;
+	ssize_t rc;
 
 	for (i = 0; i < strlen(msg); i++)
 		csum += msg[i];
 
-	write(fd, "+$", 2);
-	write(fd, msg, strlen(msg));
-	write(fd, "#", 1);
-	write(fd, lowByteToHex(csum), 2);
+	rc = write(fd, "+$", 2);
+	rc = write(fd, msg, strlen(msg));
+	rc = write(fd, "#", 1);
+	rc = write(fd, lowByteToHex(csum), 2);
+
+	(void) rc;
 }
 
 static int hex2int(char c)
@@ -399,6 +387,7 @@ int gdb_main_loop (uint32_t& gdbPort, machine& mach)
 	while (1) {
 		char buffer[255];
 		char reply[1024];
+		ssize_t wrc;
 		int i = 0, n = read(newsockfd,buffer,255);
 		buffer[n] = 0;
 		if (n <= 0) {
@@ -422,12 +411,14 @@ int gdb_main_loop (uint32_t& gdbPort, machine& mach)
 					i += 4;
 					break;
 				case 'c':
-					write(newsockfd, "+", 1);
+					wrc = write(newsockfd, "+", 1);
 					sim_resume(mach);
 					// FIXME.. assuming BREAK for now
 					sendGdbReply(newsockfd, (char *) "S05");
 					mach.cpu.asregs.regs[16] -= 2;
 					i += 4;
+
+					(void) wrc;
 					break;
 				case 'g':
 				{
@@ -496,7 +487,9 @@ int gdb_main_loop (uint32_t& gdbPort, machine& mach)
 				default:
 					while (buffer[++i] != '#');
 					i += 3;
-					write(newsockfd,"+$#00", 5);
+					wrc = write(newsockfd,"+$#00", 5);
+
+					(void) wrc;
 					break;
 				}
 			}
@@ -507,7 +500,6 @@ int gdb_main_loop (uint32_t& gdbPort, machine& mach)
 		}
 	}
 }
-#endif
 
 int main(int argc, char *argv[])
 {
@@ -517,11 +509,9 @@ int main(int argc, char *argv[])
 
 	sandboxInit(mach, argc, argv, outFilename, gdbPort);
 
-#ifdef MOXIEBOX_GDB
 	if (gdbPort)
 		gdb_main_loop(gdbPort, mach);
 	else
-#endif
 		sim_resume(mach);
 
 	if (mach.cpu.asregs.exception != SIGQUIT) {
