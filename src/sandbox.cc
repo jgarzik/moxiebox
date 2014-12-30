@@ -268,17 +268,17 @@ static char lowNibbleToHex(int nibble)
 	return hex[nibble & 0xf];
 }
 
-static char *lowByteToHex(int byte)
+static char *lowByteToHex(char *buf, int byte)
 {
-	static char buf[3];
 	buf[0] = lowNibbleToHex(byte >> 4);
 	buf[1] = lowNibbleToHex(byte);
 	buf[2] = 0;
 	return buf;
 }
 
-void sendGdbReply(int fd, char *msg)
+static void sendGdbReply(int fd, const char *msg)
 {
+	char buf[3];
 	char csum = 0;
 	unsigned int i;
 	ssize_t rc;
@@ -289,7 +289,7 @@ void sendGdbReply(int fd, char *msg)
 	rc = write(fd, "+$", 2);
 	rc = write(fd, msg, strlen(msg));
 	rc = write(fd, "#", 1);
-	rc = write(fd, lowByteToHex(csum), 2);
+	rc = write(fd, lowByteToHex(buf, csum), 2);
 
 	(void) rc;
 }
@@ -311,9 +311,8 @@ static int hex2int(char c)
 	}
 }
 
-static char *word2hex(int word)
+static char *word2hex(char *buf, int word)
 {
-	static char buf[9];
 	int i;
 	for (i = 0; i < 8; i++)
 		buf[i] = lowNibbleToHex(word >> (28 - i*4));
@@ -351,7 +350,7 @@ static uint32_t readDelimitedHexValue(char *buffer, int *index)
 	return n;
 }
 
-int gdb_main_loop (uint32_t& gdbPort, machine& mach)
+static int gdb_main_loop (uint32_t& gdbPort, machine& mach)
 {
 	int sockfd, newsockfd, on;
 	struct sockaddr_in serv_addr, cli_addr;
@@ -407,14 +406,14 @@ int gdb_main_loop (uint32_t& gdbPort, machine& mach)
 			{
 				switch (buffer[++i]) {
 				case '?':
-					sendGdbReply(newsockfd, (char *) "S05");
+					sendGdbReply(newsockfd, "S05");
 					i += 4;
 					break;
 				case 'c':
 					wrc = write(newsockfd, "+", 1);
 					sim_resume(mach);
 					// FIXME.. assuming BREAK for now
-					sendGdbReply(newsockfd, (char *) "S05");
+					sendGdbReply(newsockfd, "S05");
 					mach.cpu.asregs.regs[16] -= 2;
 					i += 4;
 
@@ -448,7 +447,8 @@ int gdb_main_loop (uint32_t& gdbPort, machine& mach)
 					while (length-- > 0)
 					{
 						int c = *p++;
-						strcat(reply, lowByteToHex(c));
+						char buf[3];
+						strcat(reply, lowByteToHex(buf, c));
 					}
 					sendGdbReply(newsockfd, reply);
 					i += 2;
@@ -463,15 +463,16 @@ int gdb_main_loop (uint32_t& gdbPort, machine& mach)
 					char *p = (char *) mach.physaddr(addr, length);
 					while (length-- > 0)
 						*p++ = readHexValueFixedLength(buffer, &i, 2);
-					sendGdbReply(newsockfd, (char *) "OK");
+					sendGdbReply(newsockfd, "OK");
 					i += 2;
 				}
 				break;
 				case 'p':
 				{
 					int r = readDelimitedHexValue(buffer, &++i);
+					char buf[9];
 					sendGdbReply(newsockfd,
-						     word2hex(mach.cpu.asregs.regs[r]));
+						     word2hex(buf, mach.cpu.asregs.regs[r]));
 					i += 2;
 				}
 				break;
@@ -480,7 +481,7 @@ int gdb_main_loop (uint32_t& gdbPort, machine& mach)
 					int r = readDelimitedHexValue(buffer, &++i);
 					word v = readDelimitedHexValue(buffer, &i);
 					mach.cpu.asregs.regs[r] = v;
-					sendGdbReply(newsockfd, (char *) "S05");
+					sendGdbReply(newsockfd, "S05");
 					i += 2;
 				}
 				break;
