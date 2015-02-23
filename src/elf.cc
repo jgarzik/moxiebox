@@ -12,8 +12,12 @@
 #include "sandbox.h"
 
 #ifndef EM_MOXIE
-#define EM_MOXIE                0xFEED  /* Moxie */
+#define EM_MOXIE                223  /* Official Moxie */
 #endif // EM_MOXIE
+
+#ifndef EM_MOXIE_OLD
+#define EM_MOXIE_OLD            0xFEED /* Old Moxie */
+#endif // EM_MOXIE_OLD
 
 using namespace std;
 
@@ -61,7 +65,8 @@ static bool loadElfFile(machine& mach, mfile& pf)
 
 	if ((ehdr.e_ident[EI_CLASS] != ELFCLASS32) ||
 	    (ehdr.e_ident[EI_DATA] != ELFDATA2LSB) ||
-	    (ehdr.e_machine != EM_MOXIE)) {
+	    ((ehdr.e_machine != EM_MOXIE)
+	     && (ehdr.e_machine != EM_MOXIE_OLD))) {
 		fprintf(stderr, "unsupported ELF binary type\n");
 		goto err_out_elf;
 	}
