@@ -11,6 +11,7 @@ libsandboxrt_a_SOURCES = \
 	memcpy.c \
 	memmap.c \
 	memset.c \
+	sha256.c \
 	strchr.c \
 	strcmp.c \
 	strcpy.c \
@@ -18,7 +19,8 @@ libsandboxrt_a_SOURCES = \
 	strncpy.c \
 	str-two-way.h \
 	strstr.c \
-	sandboxrt.h
+	sandboxrt.h \
+	sandboxrt_crypto.h
 
 MOX_LIB_OBJS = \
 	crt0.o \
@@ -28,6 +30,7 @@ MOX_LIB_OBJS = \
 	memmap.o \
 	memset.o \
 	setreturn.o \
+	sha256.o \
 	strchr.o \
 	strcmp.o \
 	strcpy.o \
@@ -59,6 +62,8 @@ memcpy.o:	memcpy.c
 memmap.o:	memmap.c
 	$(MOX_GCC) -Wall -O2 -c $<
 memset.o:	memset.c
+	$(MOX_GCC) -Wall -O2 -c $<
+sha256.o:	sha256.c
 	$(MOX_GCC) -Wall -O2 -c $<
 strchr.o:	strchr.c
 	$(MOX_GCC) -Wall -O2 -c $<

@@ -1,6 +1,6 @@
 
 #include "sandboxrt.h"
-#include "sha256.h"
+#include "sandboxrt_crypto.h"
 
 static struct moxie_memory_map_ent *data;
 
