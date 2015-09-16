@@ -17,6 +17,8 @@ missing
 moxiebox-config.h*
 stamp-h1
 
+moxiebox-*.tar.gz
+
 *.o
 
 test-driver
