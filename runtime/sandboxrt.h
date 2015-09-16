@@ -36,6 +36,19 @@ extern void _exit(int status);
 extern void *mmap(void *addr, size_t length, int prot, int flags,
 		  int fd, /*off_t*/ int offset);
 
+// ISO C assert.h
+#ifndef assert
+#  ifdef NDEBUG
+#    define assert(expr) {}
+#  else
+#    define assert(expr) { if (!(expr)) abort(); }
+#  endif
+#endif
+
+// ISO C stdlib.h
+static inline void abort(void) { _exit(1); }
+static inline void exit(int status) { _exit(status); }
+
 // ISO C string.h
 extern void *memchr(const void *s, int c, size_t n);
 extern int memcmp(const void *s1, const void *s2, size_t n);
@@ -46,6 +59,7 @@ extern char *strchr(const char *s, int c);
 extern int strcmp(const char *s1, const char *s2);
 extern char *strcpy(char *dest, const char *src);
 extern size_t strlen(const char *s);
+extern char *strncpy(char *dest, const char *src, size_t n);
 extern char *strcpy(char *dest, const char *src);
 extern char *strstr(const char *haystack, const char *needle);
 
