@@ -1,0 +1,7 @@
+
+Makefiles overly redundant when building/linking moxie code
+
+SYS_munmap
+
+malloc/free & friends
+
