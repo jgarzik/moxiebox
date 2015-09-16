@@ -34,20 +34,18 @@ QUICKREF
 */
 
 #include <stddef.h>
-//#include <string.h>
-//#include "local.h"
 
+#define PREFER_SIZE_OVER_SPEED 1
 #define LBLOCKSIZE (sizeof(long))
 #define UNALIGNED(X)   ((long)X & (LBLOCKSIZE - 1))
 #define TOO_SMALL(LEN) ((LEN) < LBLOCKSIZE)
 
-void *
-memset (void *m, int c, size_t n)
+void *memset(void *m, int c, size_t n)
 {
   char *s = (char *) m;
 
 #if !defined(PREFER_SIZE_OVER_SPEED) && !defined(__OPTIMIZE_SIZE__)
-  int i;
+  unsigned int i;
   unsigned long buffer;
   unsigned long *aligned_addr;
   unsigned int d = c & 0xff;	/* To avoid sign extension, copy C to an

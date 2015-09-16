@@ -29,10 +29,24 @@ enum moxie_mmap_flags {
 	MOXIE_MAP_ANONYMOUS = (1U << 2),
 };
 
+// moxie-specific environment
 extern struct moxie_memory_map_ent *moxie_memmap;
 extern void setreturn(void *addr, size_t length);
 extern void _exit(int status);
 extern void *mmap(void *addr, size_t length, int prot, int flags,
 		  int fd, /*off_t*/ int offset);
+
+// ISO C string.h
+extern void *memchr(const void *s, int c, size_t n);
+extern int memcmp(const void *s1, const void *s2, size_t n);
+extern void *memcpy(void *dest, const void *src, size_t n);
+extern void *memset(void *s, int c, size_t n);
+
+extern char *strchr(const char *s, int c);
+extern int strcmp(const char *s1, const char *s2);
+extern char *strcpy(char *dest, const char *src);
+extern size_t strlen(const char *s);
+extern char *strcpy(char *dest, const char *src);
+extern char *strstr(const char *haystack, const char *needle);
 
 #endif // __SANDBOXRT_H__

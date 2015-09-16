@@ -25,11 +25,11 @@ basic.o:	basic.c
 basic$(EXEEXT):	basic.o ../runtime/libsandboxrt.a
 	$(MOX_GCC) -Wall -O2 -o $@ basic.o
 
-sha256_test_SOURCES = sha256.h sha256.c sha256-test.c memset.c strstr.c
+sha256_test_SOURCES = sha256.h sha256.c sha256-test.c
 
-sha256.o:	sha256.c memset.c
+sha256.o:	sha256.c
 	$(MOX_GCC) -I$(top_srcdir)/tests -I$(top_srcdir)/runtime -Wall -O2 -c $<
-sha256-test.o:	sha256-test.c strstr.c
+sha256-test.o:	sha256-test.c
 	$(MOX_GCC) -I$(top_srcdir)/tests -I$(top_srcdir)/runtime -Wall -O2 -c $<
 sha256-test$(EXEEXT):	sha256.o sha256-test.o ../runtime/libsandboxrt.a
 	$(MOX_GCC) -Wall -O2 -o $@ sha256.o sha256-test.o
