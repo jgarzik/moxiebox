@@ -1,7 +1,6 @@
 
 #include "sandboxrt.h"
 #include "sha256.h"
-#include "strstr.c"
 
 static struct moxie_memory_map_ent *data;
 
