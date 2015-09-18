@@ -1,11 +1,11 @@
 #!/bin/sh
 
 TFN=SHA256-TEST.tmp$$
-BFN=$TOP_SRCDIR/tests/random.data.sum
+BFN=$srcdir/random.data.sum
 
 rm -f $FN
 
-../src/sandbox -e sha256-test -d $TOP_SRCDIR/tests/random.data -o $TFN
+../src/sandbox -e sha256-test -d $srcdir/random.data -o $TFN
 if [ $? -ne 0 ]; then
 	exit 1
 fi
