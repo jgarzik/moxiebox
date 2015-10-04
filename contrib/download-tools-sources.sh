@@ -20,13 +20,27 @@
 
 # A basic script to download the upstream GNU toolchain sources.
 
-svn checkout svn://gcc.gnu.org/svn/gcc/trunk gcc
+echo "Downloading GCC sources..."
+if [ ! -d gcc ]
+then
+	svn checkout svn://gcc.gnu.org/svn/gcc/trunk gcc
+else
+	( cd gcc && svn up )
+fi
 
-git clone --depth=1 git://sourceware.org/git/binutils-gdb.git
+echo "Downloading binutils sources..."
+if [ ! -d binutils-gdb ]
+then
+	git clone --depth=1 git://sourceware.org/git/binutils-gdb.git
+else
+	( cd binutils-gdb && git checkout -f && git pull )
+fi
 
+echo "Downloading newlib and libgloss..."
 cvs -z3 -d:pserver:anoncvs@sourceware.org:/cvs/src co \
     newlib \
     libgloss
 
+echo "Updating binutils and newlib/libgloss with gcc config.sub"
 cp gcc/config.sub binutils-gdb
 cp gcc/config.sub src
