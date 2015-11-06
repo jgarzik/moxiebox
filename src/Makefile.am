@@ -3,6 +3,8 @@ noinst_PROGRAMS = sandbox gen-sum
 
 noinst_LIBRARIES = libsandbox.a
 
+AM_CXXFLAGS = -std=c++11
+
 libsandbox_a_SOURCES = \
 	sandbox.h \
 	util.cc

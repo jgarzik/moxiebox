@@ -10,7 +10,11 @@
 #include <string.h>
 #include <stdint.h>
 #include <openssl/sha.h>
+#include <unordered_map>
 #include "moxie.h"
+
+typedef std::unordered_map<uint32_t, uint32_t> gprof_bb_map_t;
+typedef std::unordered_map<uint64_t, uint32_t> gprof_cg_map_t;
 
 enum {
 	MACH_PAGE_SIZE = 4096,
@@ -121,11 +125,16 @@ public:
 
 	uint32_t startAddr;
 	bool tracing;
+	bool profiling;
 	uint32_t heapAvail;
+
+	gprof_bb_map_t gprof_bb_data;
+	gprof_cg_map_t gprof_cg_data;
 
 	machine() {
 		startAddr = 0;
 		tracing = false;
+		profiling = false;
 		heapAvail = 0xfffffffU;
 	}
 
@@ -154,6 +163,5 @@ extern std::vector<unsigned char> ParseHex(const char* psz);
 extern std::vector<unsigned char> ParseHex(const std::string& str);
 extern bool ReadDir(const std::string& pathname,
 		    std::vector<std::string>& dirNames);
-
 
 #endif // __SANDBOX_H__

@@ -56,6 +56,7 @@ static void usage(const char *progname)
 		"-o <file>\t\tOutput data to <file>.  \"-\" for stdout\n"
 		"-t\t\t\tEnabling simulator tracing\n"
 		"-g <port>\t\tWait for GDB connection on given port\n"
+		"-p <file>\t\tWrite gprof formatted profile data to <file>\n"
 		,
 		progname);
 }
@@ -186,14 +187,15 @@ static bool isDir(const char *pathname)
 }
 
 static void sandboxInit(machine& mach, int argc, char **argv,
-			string& outFilename, uint32_t& gdbPort)
+			string& outFilename, string& gmonFilename,
+			uint32_t& gdbPort)
 {
 	vector<string> pathExec;
 	vector<string> pathData;
 
 	bool progLoaded = false;
 	int opt;
-	while ((opt = getopt(argc, argv, "E:e:D:d:o:tg:")) != -1) {
+	while ((opt = getopt(argc, argv, "E:e:D:d:o:tg:p:")) != -1) {
 		switch(opt) {
 		case 'E':
 			if (!isDir(optarg)) {
@@ -240,6 +242,11 @@ static void sandboxInit(machine& mach, int argc, char **argv,
 
 		case 'g':
 			gdbPort = atoi(optarg);
+			break;
+
+		case 'p':
+			mach.profiling = true;
+			gmonFilename = optarg;
 			break;
 
 		default:
@@ -502,13 +509,61 @@ static int gdb_main_loop (uint32_t& gdbPort, machine& mach)
 	}
 }
 
+static void saveProfileData(machine mach, string gmonFilename)
+{
+	FILE *f = fopen (gmonFilename.c_str(), "w");
+	
+	if (! f) {
+		perror("ERROR opening profile output data file");
+		exit (EXIT_FAILURE);
+	}
+	
+	// Write gmon file header.
+	fputs ("gmon", f);
+	int addr = 1, val = 0;
+	uint64_t arc;
+	char code = 2;
+	fwrite (&addr, 1, 4, f);
+	fwrite (&val, 1, 4, f);
+	fwrite (&val, 1, 4, f);
+	fwrite (&val, 1, 4, f);
+	
+	// Write call graph records.
+	code = 1;
+	for (gprof_cg_map_t::iterator it = mach.gprof_cg_data.begin(); 
+	     it != mach.gprof_cg_data.end(); ++it)
+	{
+		arc = it->first;
+		val = it->second;
+		fwrite (&code, 1, 1, f); 
+		fwrite (&arc, 1, 8, f);
+		fwrite (&val, 1, 4, f);
+	}
+	
+	// Write basic block counts.
+	code = 2;
+	fwrite (&code, 1, 1, f);
+	val = mach.gprof_bb_data.size();
+	fwrite (&val, 1, 4, f); // number of elements
+	for (gprof_bb_map_t::iterator it = mach.gprof_bb_data.begin(); 
+	     it != mach.gprof_bb_data.end(); ++it)
+	{
+		addr = it->first;
+		val = it->second;
+		fwrite (&addr, 1, 4, f);
+		fwrite (&val, 1, 4, f);
+	}
+	
+	fclose (f);
+}
+
 int main(int argc, char *argv[])
 {
 	machine mach;
-	string outFilename;
+	string outFilename, gmonFilename;
 	uint32_t gdbPort = 0;
 
-	sandboxInit(mach, argc, argv, outFilename, gdbPort);
+	sandboxInit(mach, argc, argv, outFilename, gmonFilename, gdbPort);
 
 	if (gdbPort)
 		gdb_main_loop(gdbPort, mach);
@@ -523,6 +578,9 @@ int main(int argc, char *argv[])
 	}
 
 	gatherOutput(mach, outFilename);
+
+	if (mach.profiling) 
+		saveProfileData(mach, gmonFilename);
 
 	// return $r0, the exit status passed to _exit()
 	return (mach.cpu.asregs.regs[2] & 0xff);
