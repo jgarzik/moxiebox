@@ -180,84 +180,22 @@ sim_resume (machine& mach, unsigned long long cpu_budget)
 	    {
 	      /* This is a Form 3 instruction.  */
 	      int opcode = (inst >> 10 & 0xf);
-
-	      switch (opcode)
+	      word flags[10] = { CC_EQ, ~CC_EQ, CC_LT, CC_GT, CC_LTU, CC_GTU, 
+				 CC_GT | CC_EQ, CC_LT | CC_EQ, CC_GTU | CC_EQ, 
+				 CC_LTU | CC_EQ };
+	      if (opcode < 10)
 		{
-		case 0x00: /* beq */
-		  {
-		    TRACE("beq");
-		    if (cpu.asregs.cc & CC_EQ)
+		  if (cpu.asregs.cc & flags[opcode])
+		    {
+		      TRACE("BRANCH");
 		      pc += INST2OFFSET(inst);
-		  }
+		    }
+		}
+	      else
+		{
+		  TRACE("SIGILL3");
+		  cpu.asregs.exception = SIGILL;
 		  break;
-		case 0x01: /* bne */
-		  {
-		    TRACE("bne");
-		    if (! (cpu.asregs.cc & CC_EQ))
-		      pc += INST2OFFSET(inst);
-		  }
-		  break;
-		case 0x02: /* blt */
-		  {
-		    TRACE("blt");
-		    if (cpu.asregs.cc & CC_LT)
-		      pc += INST2OFFSET(inst);
-		  }		  break;
-		case 0x03: /* bgt */
-		  {
-		    TRACE("bgt");
-		    if (cpu.asregs.cc & CC_GT)
-		      pc += INST2OFFSET(inst);
-		  }
-		  break;
-		case 0x04: /* bltu */
-		  {
-		    TRACE("bltu");
-		    if (cpu.asregs.cc & CC_LTU)
-		      pc += INST2OFFSET(inst);
-		  }
-		  break;
-		case 0x05: /* bgtu */
-		  {
-		    TRACE("bgtu");
-		    if (cpu.asregs.cc & CC_GTU)
-		      pc += INST2OFFSET(inst);
-		  }
-		  break;
-		case 0x06: /* bge */
-		  {
-		    TRACE("bge");
-		    if (cpu.asregs.cc & (CC_GT | CC_EQ))
-		      pc += INST2OFFSET(inst);
-		  }
-		  break;
-		case 0x07: /* ble */
-		  {
-		    TRACE("ble");
-		    if (cpu.asregs.cc & (CC_LT | CC_EQ))
-		      pc += INST2OFFSET(inst);
-		  }
-		  break;
-		case 0x08: /* bgeu */
-		  {
-		    TRACE("bgeu");
-		    if (cpu.asregs.cc & (CC_GTU | CC_EQ))
-		      pc += INST2OFFSET(inst);
-		  }
-		  break;
-		case 0x09: /* bleu */
-		  {
-		    TRACE("bleu");
-		    if (cpu.asregs.cc & (CC_LTU | CC_EQ))
-		      pc += INST2OFFSET(inst);
-		  }
-		  break;
-		default:
-		  {
-		    TRACE("SIGILL3");
-		    cpu.asregs.exception = SIGILL;
-		    break;
-		  }
 		}
 	    }
 	  else
