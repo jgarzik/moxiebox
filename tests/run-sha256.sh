@@ -5,7 +5,7 @@ BFN=$srcdir/random.data.sum
 
 rm -f $FN
 
-../src/sandbox -e sha256-test -d $srcdir/random.data -o $TFN
+../src/sandbox -e sha256-test -d $srcdir/random.data -o $TFN -p gmon.out
 if [ $? -ne 0 ]; then
 	exit 1
 fi

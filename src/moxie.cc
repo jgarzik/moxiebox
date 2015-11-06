@@ -189,6 +189,9 @@ sim_resume (machine& mach, unsigned long long cpu_budget)
 		    {
 		      TRACE("BRANCH");
 		      pc += INST2OFFSET(inst);
+		      /* Increment basic block count */
+		      if (mach.profiling)
+			mach.gprof_bb_data[pc+2]++;
 		    }
 		}
 	      else
