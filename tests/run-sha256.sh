@@ -13,7 +13,7 @@ fi
 cmp -s $TFN $BFN
 RET=$?
 
-rm -f $TFN
+rm -f $TFN gmon.out
 
 if [ $RET -ne 0 ]; then
 	exit 1

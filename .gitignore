@@ -29,4 +29,3 @@ contrib/binutils-gdb
 contrib/root
 contrib/buildmoxiebox
 
-tests/gmon.out
