@@ -19,6 +19,7 @@ Phase 1: address space preparation (code + data)
   in consecutive aligned virtual addresses following the ELF binaries.
 * 64K stack allocated. Location stored in special register 7.
 * List of memory descriptors built. Location in special register 6.
+  Descriptor layout is struct moxie_memory_map_ent
 
 This prepared 32-bit address space is the input into the program being
 executed.
